@@ -1,0 +1,5 @@
+name: Game
+author: D0gma_
+version: 0.1
+api-version: 1.19
+main: fr.aluny.gameimpl.GameImpl
