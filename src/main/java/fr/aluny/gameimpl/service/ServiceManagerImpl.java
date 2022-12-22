@@ -6,6 +6,7 @@ import fr.aluny.gameapi.command.CommandService;
 import fr.aluny.gameapi.message.MessageService;
 import fr.aluny.gameapi.player.GamePlayerService;
 import fr.aluny.gameapi.player.PlayerService;
+import fr.aluny.gameapi.scoreboard.ScoreboardService;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeamService;
 import fr.aluny.gameapi.service.NoServiceException;
 import fr.aluny.gameapi.service.Service;
@@ -83,6 +84,11 @@ public class ServiceManagerImpl implements ServiceManager {
     @Override
     public SchematicService getSchematicService() {
         return getService(SchematicService.class);
+    }
+
+    @Override
+    public ScoreboardService getScoreboardService() {
+        return getService(ScoreboardService.class);
     }
 
     @Override

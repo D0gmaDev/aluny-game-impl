@@ -8,6 +8,7 @@ import fr.aluny.gameapi.command.CommandService;
 import fr.aluny.gameapi.message.MessageService;
 import fr.aluny.gameapi.player.GamePlayerService;
 import fr.aluny.gameapi.player.PlayerService;
+import fr.aluny.gameapi.scoreboard.ScoreboardService;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeamService;
 import fr.aluny.gameapi.service.Service;
 import fr.aluny.gameapi.service.ServiceManager;
@@ -27,6 +28,7 @@ import fr.aluny.gameimpl.message.MessageServiceImpl;
 import fr.aluny.gameimpl.player.GamePlayerServiceImpl;
 import fr.aluny.gameimpl.player.PlayerListener;
 import fr.aluny.gameimpl.player.PlayerServiceImpl;
+import fr.aluny.gameimpl.scoreboard.ScoreboardServiceImpl;
 import fr.aluny.gameimpl.scoreboard.team.ScoreboardTeamServiceImpl;
 import fr.aluny.gameimpl.service.ServiceManagerImpl;
 import fr.aluny.gameimpl.settings.ServerSettingsImpl;
@@ -73,6 +75,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         MessageServiceImpl messageService = new MessageServiceImpl(serviceManager);
         PlayerServiceImpl playerService = new PlayerServiceImpl(serviceManager);
         SchematicServiceImpl schematicService = new SchematicServiceImpl();
+        ScoreboardServiceImpl scoreboardService = new ScoreboardServiceImpl(serviceManager);
         ScoreboardTeamServiceImpl scoreboardTeamService = new ScoreboardTeamServiceImpl();
         TimerServiceImpl timerService = new TimerServiceImpl();
         TranslationServiceImpl translationService = new TranslationServiceImpl();
@@ -88,6 +91,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         serviceManager.registerService(MessageService.class, messageService);
         serviceManager.registerService(PlayerService.class, playerService);
         serviceManager.registerService(SchematicService.class, schematicService);
+        serviceManager.registerService(ScoreboardService.class, scoreboardService);
         serviceManager.registerService(ScoreboardTeamService.class, scoreboardTeamService);
         serviceManager.registerService(TimerService.class, timerService);
         serviceManager.registerService(TranslationService.class, translationService);
@@ -102,7 +106,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
 
         pluginManager.registerEvents(new PlayerChatListener(chatService), this);
         pluginManager.registerEvents(new LootModifierListener(this, lootModifierService), this);
-        pluginManager.registerEvents(new PlayerListener(gamePlayerService, scoreboardTeamService), this);
+        pluginManager.registerEvents(new PlayerListener(this, gamePlayerService, scoreboardTeamService, scoreboardService), this);
 
         /* Commands registration */
         commandService.registerRuntimeCommand(new TestCommand());

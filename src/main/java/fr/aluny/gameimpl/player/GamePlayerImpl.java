@@ -3,6 +3,7 @@ package fr.aluny.gameimpl.player;
 import fr.aluny.gameapi.message.MessageHandler;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.PlayerBean;
+import fr.aluny.gameapi.scoreboard.PlayerScoreboard;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
 import fr.aluny.gameimpl.message.PlayerMessageHandler;
 import java.time.Instant;
@@ -19,9 +20,10 @@ import org.bukkit.potion.PotionEffectType;
 
 public class GamePlayerImpl implements GamePlayer {
 
-    private final Player         player;
-    private final MessageHandler messageHandler;
-    private       ScoreboardTeam scoreboardTeam;
+    private final Player           player;
+    private final MessageHandler   messageHandler;
+    private       ScoreboardTeam   scoreboardTeam;
+    private       PlayerScoreboard scoreboard;
 
     public GamePlayerImpl(Player player, PlayerBean playerBean) {
         this.player = player;
@@ -46,6 +48,16 @@ public class GamePlayerImpl implements GamePlayer {
     @Override
     public void setScoreboardTeam(ScoreboardTeam scoreboardTeam) {
         this.scoreboardTeam = scoreboardTeam;
+    }
+
+    @Override
+    public Optional<PlayerScoreboard> getScoreboard() {
+        return Optional.ofNullable(this.scoreboard);
+    }
+
+    @Override
+    public void setScoreboard(PlayerScoreboard scoreboard) {
+        this.scoreboard = scoreboard;
     }
 
     @Override
