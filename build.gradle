@@ -37,7 +37,8 @@ repositories {
 dependencies {
     implementation group: "fr.aluny", name: "game-api", version: "develop-SNAPSHOT", changing: true
 
-    implementation "de.studiocode.invui:InvUI:0.10.1"
+    implementation "de.studiocode.invui:InvUI:0.10.2"
+    implementation "fr.aluny.alunyapi:alunyapi-client:0.0.1"
 
     //implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.4.1'
 

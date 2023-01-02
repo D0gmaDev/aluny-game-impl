@@ -1,6 +1,6 @@
 package fr.aluny.gameimpl.translation;
 
-import fr.aluny.gameapi.player.PlayerBean;
+import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameapi.translation.TranslationService;
 import fr.aluny.gameapi.utils.ChatUtils;
@@ -33,7 +33,7 @@ public class TranslationServiceImpl implements TranslationService {
                 .collect(Collectors.toMap(entry -> entry.getKey().toString(), entry -> ChatUtils.colorize(entry.getValue().toString())));
 
         Locale frenchLocale = new Locale(code, true, this, translations);
-        locales.put(frenchLocale.getCode(), frenchLocale);
+        this.locales.put(frenchLocale.getCode(), frenchLocale);
     }
 
     @Override
@@ -42,13 +42,8 @@ public class TranslationServiceImpl implements TranslationService {
     }
 
     @Override
-    public Locale getLocale(PlayerBean playerBean) {
-        return null;
-    }
-
-    @Override
     public Locale getDefaultLocale() {
-        return getLocale("fr").orElseThrow();
+        return getLocale("fr-fr").orElseThrow();
     }
 
     @Override
@@ -62,13 +57,13 @@ public class TranslationServiceImpl implements TranslationService {
     }
 
     @Override
-    public String getTranslation(String key, PlayerBean playerBean, String... args) {
-        return getTranslation(key, getLocale(playerBean), args);
+    public String getTranslation(String key, PlayerAccount playerAccount, String... args) {
+        return getTranslation(key, playerAccount.getLocale(), args);
     }
 
     @Override
-    public String getTranslation(String key, PlayerBean playerBean) {
-        return getTranslation(key, getLocale(playerBean));
+    public String getTranslation(String key, PlayerAccount playerAccount) {
+        return getTranslation(key, playerAccount.getLocale());
     }
 
     @Override

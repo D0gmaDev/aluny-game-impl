@@ -3,6 +3,7 @@ package fr.aluny.gameimpl.player;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.GamePlayerService;
 import fr.aluny.gameapi.player.OfflineGamePlayer;
+import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.service.ServiceManager;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,17 +33,15 @@ public class GamePlayerServiceImpl implements GamePlayerService {
                 .orElseThrow(() -> new IllegalArgumentException("player '" + player.getName() + "' is not online"));
     }
 
-    public void onPlayerJoin(Player player) {
+    public GamePlayer onPlayerJoin(Player player, PlayerAccount account) {
         if (gamePlayerMap.containsKey(player.getUniqueId())) {
             OfflineGamePlayerImpl offlineGamePlayer = ((OfflineGamePlayerImpl) gamePlayerMap.get(player.getUniqueId()));
             offlineGamePlayer.applyDataToPlayer(player);
         }
 
-        //todo playerBean
-        GamePlayer gamePlayer = new GamePlayerImpl(player, () -> serviceManager.getTranslationService().getDefaultLocale());
+        GamePlayer gamePlayer = new GamePlayerImpl(player, account);
         gamePlayerMap.put(player.getUniqueId(), gamePlayer);
-
-        serviceManager.getScoreboardTeamService().getScoreboardTeam("godTeam").ifPresent(scoreboardTeam -> scoreboardTeam.addPlayer(gamePlayer));
+        return gamePlayer;
     }
 
     public void onPlayerQuit(Player player, boolean save) {

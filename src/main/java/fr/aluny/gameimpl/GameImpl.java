@@ -1,13 +1,17 @@
 package fr.aluny.gameimpl;
 
 import de.studiocode.invui.InvUI;
+import fr.aluny.alunyapi.generated.ApiClient;
+import fr.aluny.alunyapi.generated.Configuration;
 import fr.aluny.gameapi.IAlunyGame;
 import fr.aluny.gameapi.anchor.AnchorService;
 import fr.aluny.gameapi.chat.ChatService;
 import fr.aluny.gameapi.command.CommandService;
 import fr.aluny.gameapi.message.MessageService;
+import fr.aluny.gameapi.moderation.VanishService;
 import fr.aluny.gameapi.player.GamePlayerService;
-import fr.aluny.gameapi.player.PlayerService;
+import fr.aluny.gameapi.player.PlayerAccountService;
+import fr.aluny.gameapi.player.rank.RankService;
 import fr.aluny.gameapi.scoreboard.ScoreboardService;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeamService;
 import fr.aluny.gameapi.service.Service;
@@ -20,14 +24,18 @@ import fr.aluny.gameapi.value.ValueService;
 import fr.aluny.gameapi.world.LootModifierService;
 import fr.aluny.gameapi.world.SchematicService;
 import fr.aluny.gameimpl.anchor.AnchorServiceImpl;
+import fr.aluny.gameimpl.api.PlayerAPI;
+import fr.aluny.gameimpl.api.RankAPI;
 import fr.aluny.gameimpl.chat.ChatServiceImpl;
 import fr.aluny.gameimpl.chat.PlayerChatListener;
 import fr.aluny.gameimpl.command.CommandManager;
 import fr.aluny.gameimpl.command.CommandServiceImpl;
 import fr.aluny.gameimpl.message.MessageServiceImpl;
+import fr.aluny.gameimpl.moderation.VanishServiceImpl;
 import fr.aluny.gameimpl.player.GamePlayerServiceImpl;
+import fr.aluny.gameimpl.player.PlayerAccountServiceImpl;
 import fr.aluny.gameimpl.player.PlayerListener;
-import fr.aluny.gameimpl.player.PlayerServiceImpl;
+import fr.aluny.gameimpl.player.rank.RankServiceImpl;
 import fr.aluny.gameimpl.scoreboard.ScoreboardServiceImpl;
 import fr.aluny.gameimpl.scoreboard.team.ScoreboardTeamServiceImpl;
 import fr.aluny.gameimpl.service.ServiceManagerImpl;
@@ -66,6 +74,13 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
 
         this.serviceManager = new ServiceManagerImpl();
 
+        /* API */
+        ApiClient apiClient = Configuration.getDefaultApiClient();
+        apiClient.setBasePath("http://elity.fr:8080");
+
+        RankAPI rankAPI = new RankAPI(apiClient);
+        PlayerAPI playerAPI = new PlayerAPI(apiClient, serviceManager);
+
         /* Services instantiation */
         AnchorServiceImpl anchorService = new AnchorServiceImpl();
         ChatServiceImpl chatService = new ChatServiceImpl();
@@ -73,13 +88,15 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         GamePlayerServiceImpl gamePlayerService = new GamePlayerServiceImpl(serviceManager);
         LootModifierServiceImpl lootModifierService = new LootModifierServiceImpl(serviceManager);
         MessageServiceImpl messageService = new MessageServiceImpl(serviceManager);
-        PlayerServiceImpl playerService = new PlayerServiceImpl(serviceManager);
+        PlayerAccountServiceImpl playerService = new PlayerAccountServiceImpl(playerAPI, serviceManager);
+        RankServiceImpl rankService = new RankServiceImpl(rankAPI, serviceManager, serverSettings);
         SchematicServiceImpl schematicService = new SchematicServiceImpl();
         ScoreboardServiceImpl scoreboardService = new ScoreboardServiceImpl(serviceManager);
         ScoreboardTeamServiceImpl scoreboardTeamService = new ScoreboardTeamServiceImpl();
         TimerServiceImpl timerService = new TimerServiceImpl();
         TranslationServiceImpl translationService = new TranslationServiceImpl();
         ValueServiceImpl valueService = new ValueServiceImpl();
+        VanishServiceImpl vanishService = new VanishServiceImpl(this, gamePlayerService);
         RunnableHelperImpl runnableHelper = new RunnableHelperImpl(this);
 
         /* Services registration */
@@ -89,13 +106,15 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         serviceManager.registerService(GamePlayerService.class, gamePlayerService);
         serviceManager.registerService(LootModifierService.class, lootModifierService);
         serviceManager.registerService(MessageService.class, messageService);
-        serviceManager.registerService(PlayerService.class, playerService);
+        serviceManager.registerService(PlayerAccountService.class, playerService);
+        serviceManager.registerService(RankService.class, rankService);
         serviceManager.registerService(SchematicService.class, schematicService);
         serviceManager.registerService(ScoreboardService.class, scoreboardService);
         serviceManager.registerService(ScoreboardTeamService.class, scoreboardTeamService);
         serviceManager.registerService(TimerService.class, timerService);
         serviceManager.registerService(TranslationService.class, translationService);
         serviceManager.registerService(ValueService.class, valueService);
+        serviceManager.registerService(VanishService.class, vanishService);
         serviceManager.registerService(RunnableHelper.class, runnableHelper);
 
         /* Services initialisation */
@@ -106,7 +125,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
 
         pluginManager.registerEvents(new PlayerChatListener(chatService), this);
         pluginManager.registerEvents(new LootModifierListener(this, lootModifierService), this);
-        pluginManager.registerEvents(new PlayerListener(this, gamePlayerService, scoreboardTeamService, scoreboardService), this);
+        pluginManager.registerEvents(new PlayerListener(this, serviceManager), this);
 
         /* Commands registration */
         commandService.registerRuntimeCommand(new TestCommand());
@@ -118,7 +137,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         VersionMatcherImpl.matchVersion();
 
         /* Translations */
-        translationService.loadTranslations(this, "fr", "lang/fr.properties");
+        translationService.loadTranslations(this, "fr-fr", "lang/fr.properties");
 
         logger.log(Level.INFO, "===============[ GAME ]===============");
         logger.log(Level.INFO, "          Game plugin enabled         ");

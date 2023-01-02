@@ -4,8 +4,10 @@ import fr.aluny.gameapi.anchor.AnchorService;
 import fr.aluny.gameapi.chat.ChatService;
 import fr.aluny.gameapi.command.CommandService;
 import fr.aluny.gameapi.message.MessageService;
+import fr.aluny.gameapi.moderation.VanishService;
 import fr.aluny.gameapi.player.GamePlayerService;
-import fr.aluny.gameapi.player.PlayerService;
+import fr.aluny.gameapi.player.PlayerAccountService;
+import fr.aluny.gameapi.player.rank.RankService;
 import fr.aluny.gameapi.scoreboard.ScoreboardService;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeamService;
 import fr.aluny.gameapi.service.NoServiceException;
@@ -77,8 +79,13 @@ public class ServiceManagerImpl implements ServiceManager {
     }
 
     @Override
-    public PlayerService getPlayerService() {
-        return getService(PlayerService.class);
+    public PlayerAccountService getPlayerAccountService() {
+        return getService(PlayerAccountService.class);
+    }
+
+    @Override
+    public RankService getRankService() {
+        return getService(RankService.class);
     }
 
     @Override
@@ -109,6 +116,11 @@ public class ServiceManagerImpl implements ServiceManager {
     @Override
     public ValueService getValueService() {
         return getService(ValueService.class);
+    }
+
+    @Override
+    public VanishService getVanishService() {
+        return getService(VanishService.class);
     }
 
     @Override

@@ -2,7 +2,7 @@ package fr.aluny.gameimpl.player;
 
 import fr.aluny.gameapi.message.MessageHandler;
 import fr.aluny.gameapi.player.GamePlayer;
-import fr.aluny.gameapi.player.PlayerBean;
+import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.scoreboard.PlayerScoreboard;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
 import fr.aluny.gameimpl.message.PlayerMessageHandler;
@@ -24,8 +24,9 @@ public class GamePlayerImpl implements GamePlayer {
     private final MessageHandler   messageHandler;
     private       ScoreboardTeam   scoreboardTeam;
     private       PlayerScoreboard scoreboard;
+    private       boolean          vanished;
 
-    public GamePlayerImpl(Player player, PlayerBean playerBean) {
+    public GamePlayerImpl(Player player, PlayerAccount playerBean) {
         this.player = player;
         this.messageHandler = new PlayerMessageHandler(player, playerBean.getLocale());
     }
@@ -58,6 +59,15 @@ public class GamePlayerImpl implements GamePlayer {
     @Override
     public void setScoreboard(PlayerScoreboard scoreboard) {
         this.scoreboard = scoreboard;
+    }
+
+    @Override
+    public boolean isVanished() {
+        return this.vanished;
+    }
+
+    public void setVanished(boolean vanished) {
+        this.vanished = vanished;
     }
 
     @Override
