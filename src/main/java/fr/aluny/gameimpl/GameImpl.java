@@ -4,7 +4,6 @@ import de.studiocode.invui.InvUI;
 import fr.aluny.alunyapi.generated.ApiClient;
 import fr.aluny.alunyapi.generated.Configuration;
 import fr.aluny.gameapi.IAlunyGame;
-import fr.aluny.gameapi.anchor.AnchorService;
 import fr.aluny.gameapi.chat.ChatService;
 import fr.aluny.gameapi.command.CommandService;
 import fr.aluny.gameapi.message.MessageService;
@@ -12,6 +11,7 @@ import fr.aluny.gameapi.moderation.VanishService;
 import fr.aluny.gameapi.player.GamePlayerService;
 import fr.aluny.gameapi.player.PlayerAccountService;
 import fr.aluny.gameapi.player.rank.RankService;
+import fr.aluny.gameapi.proxy.ProxyMessagingService;
 import fr.aluny.gameapi.scoreboard.ScoreboardService;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeamService;
 import fr.aluny.gameapi.service.Service;
@@ -23,7 +23,7 @@ import fr.aluny.gameapi.translation.TranslationService;
 import fr.aluny.gameapi.value.ValueService;
 import fr.aluny.gameapi.world.LootModifierService;
 import fr.aluny.gameapi.world.SchematicService;
-import fr.aluny.gameimpl.anchor.AnchorServiceImpl;
+import fr.aluny.gameapi.world.anchor.AnchorService;
 import fr.aluny.gameimpl.api.PlayerAPI;
 import fr.aluny.gameimpl.api.RankAPI;
 import fr.aluny.gameimpl.chat.ChatServiceImpl;
@@ -36,6 +36,7 @@ import fr.aluny.gameimpl.player.GamePlayerServiceImpl;
 import fr.aluny.gameimpl.player.PlayerAccountServiceImpl;
 import fr.aluny.gameimpl.player.PlayerListener;
 import fr.aluny.gameimpl.player.rank.RankServiceImpl;
+import fr.aluny.gameimpl.proxy.ProxyMessagingServiceImpl;
 import fr.aluny.gameimpl.scoreboard.ScoreboardServiceImpl;
 import fr.aluny.gameimpl.scoreboard.team.ScoreboardTeamServiceImpl;
 import fr.aluny.gameimpl.service.ServiceManagerImpl;
@@ -48,6 +49,7 @@ import fr.aluny.gameimpl.version.VersionMatcherImpl;
 import fr.aluny.gameimpl.world.LootModifierListener;
 import fr.aluny.gameimpl.world.LootModifierServiceImpl;
 import fr.aluny.gameimpl.world.SchematicServiceImpl;
+import fr.aluny.gameimpl.world.anchor.AnchorServiceImpl;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -89,6 +91,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         LootModifierServiceImpl lootModifierService = new LootModifierServiceImpl(serviceManager);
         MessageServiceImpl messageService = new MessageServiceImpl(serviceManager);
         PlayerAccountServiceImpl playerService = new PlayerAccountServiceImpl(playerAPI, serviceManager);
+        ProxyMessagingServiceImpl proxyMessagingService = new ProxyMessagingServiceImpl(this);
         RankServiceImpl rankService = new RankServiceImpl(rankAPI, serviceManager, serverSettings);
         SchematicServiceImpl schematicService = new SchematicServiceImpl();
         ScoreboardServiceImpl scoreboardService = new ScoreboardServiceImpl(serviceManager);
@@ -107,6 +110,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         serviceManager.registerService(LootModifierService.class, lootModifierService);
         serviceManager.registerService(MessageService.class, messageService);
         serviceManager.registerService(PlayerAccountService.class, playerService);
+        serviceManager.registerService(ProxyMessagingService.class, proxyMessagingService);
         serviceManager.registerService(RankService.class, rankService);
         serviceManager.registerService(SchematicService.class, schematicService);
         serviceManager.registerService(ScoreboardService.class, scoreboardService);
@@ -128,7 +132,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         pluginManager.registerEvents(new PlayerListener(this, serviceManager), this);
 
         /* Commands registration */
-        commandService.registerRuntimeCommand(new TestCommand());
+        //commandService.registerRuntimeCommand(new TestCommand());
 
         /* Inventories startup */
         InvUI.getInstance().setPlugin(this);

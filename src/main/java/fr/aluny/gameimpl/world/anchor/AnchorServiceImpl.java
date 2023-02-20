@@ -1,7 +1,7 @@
-package fr.aluny.gameimpl.anchor;
+package fr.aluny.gameimpl.world.anchor;
 
-import fr.aluny.gameapi.anchor.Anchor;
-import fr.aluny.gameapi.anchor.AnchorService;
+import fr.aluny.gameapi.world.anchor.Anchor;
+import fr.aluny.gameapi.world.anchor.AnchorService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
