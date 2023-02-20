@@ -67,8 +67,6 @@ public class LootModifierServiceImpl implements LootModifierService {
             event.setDropItems(false);
 
             serviceManager.getRunnableHelper().runLaterSynchronously(() -> {
-                GameUtils.dropExperience(event.getBlock().getLocation().add(0.5, 0.5, 0.5), event.getExpToDrop());
-
                 for (ItemStack itemStack : drops)
                     if (itemStack != null && itemStack.getType() != Material.AIR)
                         event.getBlock().getWorld().dropItem(event.getBlock().getLocation().clone().add(0.5, 0.3, 0.5), itemStack);

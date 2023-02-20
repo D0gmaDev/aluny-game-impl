@@ -1,7 +1,7 @@
 package fr.aluny.gameimpl.command;
 
 import fr.aluny.gameapi.command.Command;
-import fr.aluny.gameapi.message.MessageHandler;
+import fr.aluny.gameapi.player.GamePlayer;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -15,17 +15,17 @@ class CommandInvoker {
 
     static {
         PARSER_MAP.put(String.class, new ArgumentParser(Function.identity(), null));
-        PARSER_MAP.put(UUID.class, new ArgumentParser(UUID::fromString, "gameimpl.command.not_a_uuid"));
-        PARSER_MAP.put(Long.class, new ArgumentParser(Long::parseLong, "gameimpl.command.not_an_integer"));
-        PARSER_MAP.put(long.class, new ArgumentParser(Long::parseLong, "gameimpl.command.not_an_integer"));
-        PARSER_MAP.put(Integer.class, new ArgumentParser(Long::parseLong, "gameimpl.command.not_an_integer"));
-        PARSER_MAP.put(int.class, new ArgumentParser(Long::parseLong, "gameimpl.command.not_an_integer"));
-        PARSER_MAP.put(Double.class, new ArgumentParser(Double::parseDouble, "gameimpl.command.not_a_number"));
-        PARSER_MAP.put(double.class, new ArgumentParser(Double::parseDouble, "gameimpl.command.not_a_number"));
-        PARSER_MAP.put(Player.class, new ArgumentParser(s -> Optional.ofNullable(Bukkit.getPlayer(s)).orElseThrow(IllegalArgumentException::new), "gameimpl.command.target_not_found"));
+        PARSER_MAP.put(UUID.class, new ArgumentParser(UUID::fromString, "command_validation_not_a_uuid"));
+        PARSER_MAP.put(Long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
+        PARSER_MAP.put(long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
+        PARSER_MAP.put(Integer.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
+        PARSER_MAP.put(int.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
+        PARSER_MAP.put(Double.class, new ArgumentParser(Double::parseDouble, "command_validation_not_a_number"));
+        PARSER_MAP.put(double.class, new ArgumentParser(Double::parseDouble, "command_validation_not_a_number"));
+        PARSER_MAP.put(Player.class, new ArgumentParser(s -> Optional.ofNullable(Bukkit.getPlayer(s)).orElseThrow(IllegalArgumentException::new), "command_validation_player_not_found"));
     }
 
-    static void invoke(Player player, MessageHandler messageHandler, Command command, Method method, String[] args) {
+    static void invoke(GamePlayer player, Command command, Method method, String[] args) {
         try {
 
             if (method.getParameterCount() <= 1) {
@@ -51,7 +51,7 @@ class CommandInvoker {
                 }
 
                 if (args.length < i) {
-                    //player.sendMessage(playerBean.translate("gameimpl.command.not_enough_args"));
+                    player.getMessageHandler().sendMessage("command_validation_not_enough_args");
                     return;
                 }
 
@@ -63,7 +63,7 @@ class CommandInvoker {
                 try {
                     arguments.add(commandInvoker.parser.apply(args[i - 1]));
                 } catch (IllegalArgumentException e) {
-                    //player.sendMessage(playerBean.translate(commandInvoker.errorMessage, args[i - 1]));
+                    player.getMessageHandler().sendMessage(commandInvoker.errorMessage, args[i - 1]);
                     return;
                 }
             }

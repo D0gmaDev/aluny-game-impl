@@ -27,4 +27,9 @@ public class PlayerAccountServiceImpl implements PlayerAccountService {
     public Optional<PlayerAccount> getPlayerAccount(UUID uuid) {
         return playerAPI.getPlayer(uuid);
     }
+
+    @Override
+    public Optional<PlayerAccount> getPlayerAccountByName(String name) {
+        return playerAPI.getPlayerByName(name);
+    }
 }

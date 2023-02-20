@@ -4,6 +4,7 @@ import fr.aluny.alunyapi.generated.ApiClient;
 import fr.aluny.alunyapi.generated.ApiException;
 import fr.aluny.alunyapi.generated.api.RankControllerApi;
 import fr.aluny.gameapi.player.rank.Rank;
+import fr.aluny.gameapi.utils.ChatUtils;
 import fr.aluny.gameimpl.player.rank.RankImpl;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +22,7 @@ public class RankAPI {
         try {
 
             return apiInstance.getAll().stream()
-                    .map(rankDTO -> new RankImpl(rankDTO.getId().intValue(), rankDTO.getName(), rankDTO.getImportanceIndex().intValue(), rankDTO.getPrefix(), rankDTO.getPermissions()))
+                    .map(rankDTO -> new RankImpl(rankDTO.getId().intValue(), rankDTO.getName(), rankDTO.getImportanceIndex().intValue(), ChatUtils.colorize(rankDTO.getPrefix()), rankDTO.getPermissions()))
                     .collect(Collectors.toList());
 
         } catch (ApiException e) {

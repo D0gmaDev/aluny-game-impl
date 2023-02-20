@@ -9,6 +9,7 @@ import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameimpl.player.PlayerAccountImpl;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -53,5 +54,39 @@ public class PlayerAPI {
             System.err.println("Exception when parsing '" + uuid + "' PlayerDTO: " + e.getMessage());
             return Optional.empty();
         }
+    }
+
+    public List<PlayerAccount> searchPlayersByName(String name) {
+        try {
+
+            return apiInstance.searchPlayers(name).stream().map(player -> {
+                Optional<Locale> locale = serviceManager.getTranslationService().getLocale(player.getLocale());
+
+                if (locale.isEmpty())
+                    throw new IllegalStateException("locale: " + player.getLocale());
+
+                if (player.getRankIds() == null)
+                    throw new IllegalStateException("rankIds is null");
+
+                Set<Rank> ranks = player.getRankIds().stream().map(id -> serviceManager.getRankService().getRankById(id).orElseThrow(() -> new IllegalStateException("rank: " + id))).collect(Collectors.toUnmodifiableSet());
+
+                return new PlayerAccountImpl(player.getUuid(), player.getUsername(), locale.get(), ranks, player.getCreatedAt());
+            }).collect(Collectors.toList());
+
+        } catch (ApiException e) {
+            System.err.println("Exception when calling PlayerControllerApi#getPlayer");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+            return List.of();
+        } catch (IllegalStateException e) {
+            System.err.println("Exception when parsing '" + name + "' PlayerDTO: " + e.getMessage());
+            return List.of();
+        }
+    }
+
+    public Optional<PlayerAccount> getPlayerByName(String name) {
+        return searchPlayersByName(name).stream().filter(playerAccount -> playerAccount.getName().equalsIgnoreCase(name)).findAny();
     }
 }

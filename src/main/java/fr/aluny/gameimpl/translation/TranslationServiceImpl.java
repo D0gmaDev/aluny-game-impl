@@ -17,6 +17,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class TranslationServiceImpl implements TranslationService {
 
+    private static final String DEFAULT_LOCALE_CODE = "fr-fr";
+
     private final Map<String, Locale> locales = new HashMap<>();
 
     @Override
@@ -32,8 +34,8 @@ public class TranslationServiceImpl implements TranslationService {
         Map<String, String> translations = properties.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().toString(), entry -> ChatUtils.colorize(entry.getValue().toString())));
 
-        Locale frenchLocale = new Locale(code, true, this, translations);
-        this.locales.put(frenchLocale.getCode(), frenchLocale);
+        Locale locale = new Locale(code, code.equals(DEFAULT_LOCALE_CODE), this, translations);
+        this.locales.put(locale.getCode(), locale);
     }
 
     @Override
@@ -43,7 +45,7 @@ public class TranslationServiceImpl implements TranslationService {
 
     @Override
     public Locale getDefaultLocale() {
-        return getLocale("fr-fr").orElseThrow();
+        return getLocale(DEFAULT_LOCALE_CODE).orElseThrow();
     }
 
     @Override

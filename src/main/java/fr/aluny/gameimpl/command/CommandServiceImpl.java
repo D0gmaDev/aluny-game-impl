@@ -6,7 +6,7 @@ import fr.aluny.gameapi.command.CommandService;
 import fr.aluny.gameapi.command.Default;
 import fr.aluny.gameapi.command.SubCommand;
 import fr.aluny.gameapi.command.TabCompleter;
-import fr.aluny.gameapi.message.MessageHandler;
+import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.service.ServiceManager;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -100,30 +100,32 @@ public class CommandServiceImpl implements CommandService {
             if (!(commandSender instanceof Player player))
                 return true;
 
-            MessageHandler messageHandler = serviceManager.getGamePlayerService().getPlayer(player).getMessageHandler();
+            GamePlayer gamePlayer = serviceManager.getGamePlayerService().getPlayer(player);
 
-            if (!player.hasPermission(defaultPermission))
+            if (!player.hasPermission(defaultPermission)) {
+                gamePlayer.getMessageHandler().sendMessage("command_validation_no_permission");
                 return true;
+            }
 
             if (args.length > 0) {
                 List<SubCommandWrapper> validSubCommands = subCommands.stream().filter(subCommand -> subCommand.name.equalsIgnoreCase(args[0])).toList();
                 if (validSubCommands.size() == 0) {
                     if (defaultMethod != null)
-                        CommandInvoker.invoke(player, messageHandler, command, defaultMethod, args);
+                        CommandInvoker.invoke(gamePlayer, command, defaultMethod, args);
                 } else
                     validSubCommands.forEach(subCommand -> {
                         if (subCommand.permission.equalsIgnoreCase("") || player.hasPermission(subCommand.permission)) {
                             String[] newArgs = Arrays.stream(args).skip(1).toArray(String[]::new);
-                            CommandInvoker.invoke(player, messageHandler, command, subCommand.method, newArgs);
+                            CommandInvoker.invoke(gamePlayer, command, subCommand.method, newArgs);
                         } else {
-                            //send no perms message
+                            gamePlayer.getMessageHandler().sendMessage("command_validation_no_permission");
                         }
                     });
                 return true;
             }
 
             if (defaultMethod != null)
-                CommandInvoker.invoke(player, messageHandler, command, defaultMethod, args);
+                CommandInvoker.invoke(gamePlayer, command, defaultMethod, args);
 
             return true;
         }
