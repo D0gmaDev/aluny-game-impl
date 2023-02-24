@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class TranslationServiceImpl implements TranslationService {
@@ -34,8 +35,10 @@ public class TranslationServiceImpl implements TranslationService {
         Map<String, String> translations = properties.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().toString(), entry -> ChatUtils.colorize(entry.getValue().toString())));
 
-        Locale locale = new Locale(code, code.equals(DEFAULT_LOCALE_CODE), this, translations);
-        this.locales.put(locale.getCode(), locale);
+        Locale locale = this.locales.getOrDefault(code, this.locales.put(code, new Locale(code, code.equals(DEFAULT_LOCALE_CODE), this)));
+        locale.addTranslations(translations);
+
+        Bukkit.getLogger().info(String.format("Loaded %d translations from '%s' (%s) file of plugin %s.", translations.size(), file, code, plugin.getName()));
     }
 
     @Override

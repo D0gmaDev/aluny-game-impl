@@ -87,6 +87,7 @@ public class CommandServiceImpl implements CommandService {
 
         BukkitCommandWrapper(Command command, String name, String[] aliases, String defaultPermission, Method defaultMethod, Method tabCompleter, List<SubCommandWrapper> subCommands) {
             super(name, "", "", Arrays.asList(aliases));
+            this.setPermission(defaultPermission);
 
             this.command = command;
             this.defaultPermission = defaultPermission;

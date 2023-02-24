@@ -84,8 +84,9 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         PlayerAPI playerAPI = new PlayerAPI(apiClient, serviceManager);
 
         /* Services instantiation */
+        RunnableHelperImpl runnableHelper = new RunnableHelperImpl(this);
         AnchorServiceImpl anchorService = new AnchorServiceImpl();
-        ChatServiceImpl chatService = new ChatServiceImpl();
+        ChatServiceImpl chatService = new ChatServiceImpl(runnableHelper);
         CommandServiceImpl commandService = new CommandServiceImpl(new CommandManager(this), serviceManager);
         GamePlayerServiceImpl gamePlayerService = new GamePlayerServiceImpl(serviceManager);
         LootModifierServiceImpl lootModifierService = new LootModifierServiceImpl(serviceManager);
@@ -100,7 +101,6 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         TranslationServiceImpl translationService = new TranslationServiceImpl();
         ValueServiceImpl valueService = new ValueServiceImpl();
         VanishServiceImpl vanishService = new VanishServiceImpl(this, gamePlayerService);
-        RunnableHelperImpl runnableHelper = new RunnableHelperImpl(this);
 
         /* Services registration */
         serviceManager.registerService(AnchorService.class, anchorService);
@@ -127,12 +127,12 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         /* Listeners registration */
         PluginManager pluginManager = getServer().getPluginManager();
 
-        pluginManager.registerEvents(new PlayerChatListener(chatService), this);
+        pluginManager.registerEvents(new PlayerChatListener(chatService, gamePlayerService), this);
         pluginManager.registerEvents(new LootModifierListener(this, lootModifierService), this);
         pluginManager.registerEvents(new PlayerListener(this, serviceManager), this);
 
         /* Commands registration */
-        //commandService.registerRuntimeCommand(new TestCommand());
+        //commandService.registerRuntimeCommand(new TestCommand(chatService));
 
         /* Inventories startup */
         InvUI.getInstance().setPlugin(this);

@@ -1,9 +1,11 @@
 package fr.aluny.gameimpl.chat;
 
+import fr.aluny.gameapi.chat.ChatCallback;
 import fr.aluny.gameapi.chat.ChatPreProcessor;
 import fr.aluny.gameapi.chat.ChatProcessor;
 import fr.aluny.gameapi.chat.ChatService;
 import fr.aluny.gameapi.chat.ProcessedChat;
+import fr.aluny.gameapi.timer.RunnableHelper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +15,6 @@ import java.util.regex.Pattern;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
-import reactor.core.publisher.MonoSink;
 
 public class ChatServiceImpl implements ChatService {
 
@@ -21,7 +22,13 @@ public class ChatServiceImpl implements ChatService {
 
     private final Map<String, List<ChatPreProcessor>> chatPreProcessors = new HashMap<>();
     private final Map<String, ChatProcessor>          chatProcessors    = new HashMap<>();
-    private final Map<UUID, MonoSink<String>>         chatCallbacks     = new HashMap<>();
+    private final Map<UUID, IdentifiedCallback>       chatCallbacks     = new HashMap<>();
+
+    private final RunnableHelper runnableHelper;
+
+    public ChatServiceImpl(RunnableHelper runnableHelper) {
+        this.runnableHelper = runnableHelper;
+    }
 
     @Override
     public void registerDefaultChatPreProcessor(ChatPreProcessor chatPreProcessor) {
@@ -68,22 +75,31 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public void addChatListener(UUID uuid, MonoSink<String> callback) {
-        chatCallbacks.put(uuid, callback.onDispose(() -> chatCallbacks.remove(uuid)));
+    public void addChatListener(UUID uuid, ChatCallback callback) {
+
+        if (chatCallbacks.containsKey(uuid))
+            chatCallbacks.get(uuid).callback().onError();
+
+        UUID callbackId = UUID.randomUUID();
+        chatCallbacks.put(uuid, new IdentifiedCallback(callbackId, callback));
+
+        runnableHelper.runLaterAsynchronously(() -> {
+            if (chatCallbacks.containsKey(uuid) && chatCallbacks.get(uuid).uuid().equals(callbackId))
+                chatCallbacks.remove(uuid).callback().onError();
+        }, 600);
     }
 
     @Override
     public void cancelChatListener(UUID uuid) {
-        if (chatCallbacks.containsKey(uuid)) {
-            chatCallbacks.remove(uuid).error(new IllegalStateException("Cancelled"));
-        }
+        if (chatCallbacks.containsKey(uuid))
+            chatCallbacks.remove(uuid).callback().onError();
     }
 
     public boolean executeChatListener(UUID uuid, String text) {
         if (!chatCallbacks.containsKey(uuid))
             return false;
 
-        chatCallbacks.remove(uuid).success(text);
+        chatCallbacks.remove(uuid).callback().callback(text);
         return true;
     }
 
@@ -116,10 +132,7 @@ public class ChatServiceImpl implements ChatService {
 
         processedChat = this.acceptPreProcess(processedChat);
 
-        if (processedChat == null)
-            return;
-
-        if (processedChat.isCancelled())
+        if (processedChat == null || processedChat.isCancelled())
             return;
 
         String c = String.valueOf(event.getMessage().charAt(0));
@@ -147,5 +160,9 @@ public class ChatServiceImpl implements ChatService {
         });
 
         setDefaultChatProcessor(processedChat -> Bukkit.broadcastMessage(processedChat.getSender().getName() + " : " + processedChat.getGlobalMessage()));
+    }
+
+    private record IdentifiedCallback(UUID uuid, ChatCallback callback) {
+
     }
 }

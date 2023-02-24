@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
@@ -19,7 +18,6 @@ public class ScoreboardTeamServiceImpl implements ScoreboardTeamService {
 
     public ScoreboardTeamServiceImpl() {
         this.scoreboard = Objects.requireNonNull(Bukkit.getScoreboardManager()).getNewScoreboard();
-        registerScoreboardTeam("godTeam", ChatColor.of("#f2837c") + "GOD ");
     }
 
     @Override

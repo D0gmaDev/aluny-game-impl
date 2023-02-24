@@ -1,6 +1,8 @@
 package fr.aluny.gameimpl.chat;
 
+import fr.aluny.gameimpl.player.GamePlayerServiceImpl;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -10,11 +12,14 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 public class PlayerChatListener implements Listener {
 
     private static final Set<String> FORBIDDEN_COMMANDS = Set.of("version", "ver", "icanhasbukkit", "help", "me", "?");
+    private static final Pattern     COMMAND_PREFIX     = Pattern.compile("^/((minecraft)|(bukkit)|(spigot)):");
 
-    private final ChatServiceImpl chatService;
+    private final ChatServiceImpl       chatService;
+    private final GamePlayerServiceImpl gamePlayerService;
 
-    public PlayerChatListener(ChatServiceImpl chatService) {
+    public PlayerChatListener(ChatServiceImpl chatService, GamePlayerServiceImpl gamePlayerService) {
         this.chatService = chatService;
+        this.gamePlayerService = gamePlayerService;
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -31,8 +36,7 @@ public class PlayerChatListener implements Listener {
 
     private boolean isBlocked(String message) {
 
-        String command = message.substring(1)
-                .replaceFirst("^((minecraft)|(bukkit)|(spigot)):", "")
+        String command = COMMAND_PREFIX.matcher(message).replaceFirst("")
                 .split(" ")[0].toLowerCase();
 
         return FORBIDDEN_COMMANDS.contains(command);
@@ -42,11 +46,7 @@ public class PlayerChatListener implements Listener {
     public void onCommandPreprocess(PlayerCommandPreprocessEvent event) {
         if (isBlocked(event.getMessage())) {
             event.setCancelled(true);
-            //TODO send no permission message
+            gamePlayerService.getPlayer(event.getPlayer()).getMessageHandler().sendMessage("command_validation_no_permission");
         }
     }
-
-    //Note that due to client changes, if the sender is a Player, this event will only begin to fire once command arguments
-    // are specified, not commands themselves. Plugins wishing to remove commands from tab completion are advised to ensure
-    // the client does not have permission for the relevant commands, or use PlayerCommandSendEvent.
 }

@@ -1,8 +1,8 @@
 package fr.aluny.gameimpl.scoreboard.structure;
 
 import fr.aluny.gameapi.scoreboard.PlayerScoreboard;
-import fr.aluny.gameapi.scoreboard.structure.impl.BaseScoreboardLine;
 import fr.aluny.gameapi.scoreboard.structure.ScoreboardLineProvider;
+import fr.aluny.gameapi.scoreboard.structure.impl.BaseScoreboardLine;
 import fr.aluny.gameapi.timer.Timer;
 import reactor.core.Disposable;
 

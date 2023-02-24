@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -131,10 +132,10 @@ public class SchematicLoader {
 
         private final Material material;
 
-        private BlockFace face;
-        private Half      half;
-        private Shape     stairsShape;
-        private boolean   waterLogged;
+        private       BlockFace face;
+        private       Half      half;
+        private       Shape     stairsShape;
+        private final boolean   waterLogged;
 
         public ParameterizedBlock(Material material, Map<String, String> params) {
             this.material = material;
@@ -247,7 +248,9 @@ public class SchematicLoader {
 
     public static class EntityData implements SchematicEntityData {
 
-        private short length, height, width;
+        private final short length;
+        private final short height;
+        private final short width;
 
         private double posX, posY, posZ;
 
@@ -265,7 +268,7 @@ public class SchematicLoader {
 
         @Override
         public Entity summon(Location location) {
-            return location.getWorld().spawnEntity(location.getBlock().getLocation().clone().add(this.posX, this.posY, this.posZ).getBlock().getLocation().clone().add(0.5, 0, 0.5), this.entityType);
+            return Objects.requireNonNull(location.getWorld()).spawnEntity(location.getBlock().getLocation().clone().add(this.posX, this.posY, this.posZ).getBlock().getLocation().clone().add(0.5, 0, 0.5), this.entityType);
         }
 
         @Override

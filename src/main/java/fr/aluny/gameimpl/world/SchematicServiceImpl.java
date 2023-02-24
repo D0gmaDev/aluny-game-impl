@@ -8,7 +8,7 @@ public class SchematicServiceImpl implements SchematicService {
 
     @Override
     public SchematicImpl loadSchematic(String name, Plugin plugin) {
-        return loadSchematic(getSchematicFromRessources(name, plugin));
+        return loadSchematic(getSchematicStreamFromResources(name, plugin));
     }
 
     @Override
@@ -23,7 +23,7 @@ public class SchematicServiceImpl implements SchematicService {
     }
 
     @Override
-    public InputStream getSchematicFromRessources(String name, Plugin plugin) {
+    public InputStream getSchematicStreamFromResources(String name, Plugin plugin) {
         return plugin.getClass().getClassLoader().getResourceAsStream(name);
     }
 }

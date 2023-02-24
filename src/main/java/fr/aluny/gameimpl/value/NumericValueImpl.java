@@ -62,15 +62,15 @@ public class NumericValueImpl<T extends Number> extends Value<T> implements Nume
     @Override
     public T getMaxValue() {
         return getRestrictions().stream().filter(restriction -> restriction.isType(RestrictionType.MAXIMAL_VALUE))
-                .min(Comparator.comparingDouble(restriction -> restriction.getRestriction().getT2().doubleValue()))
-                .map(restriction -> restriction.getRestriction().getT2()).orElse(this.defaultMaxValue);
+                .min(Comparator.comparingDouble(restriction -> restriction.getValue().doubleValue()))
+                .map(ValueRestriction::getValue).orElse(this.defaultMaxValue);
     }
 
     @Override
     public T getMinValue() {
         return getRestrictions().stream().filter(restriction -> restriction.isType(RestrictionType.MINIMAL_VALUE))
-                .max(Comparator.comparingDouble(restriction -> restriction.getRestriction().getT2().doubleValue()))
-                .map(restriction -> restriction.getRestriction().getT2()).orElse(this.defaultMinValue);
+                .max(Comparator.comparingDouble(restriction -> restriction.getValue().doubleValue()))
+                .map(ValueRestriction::getValue).orElse(this.defaultMinValue);
     }
 
     @Override
