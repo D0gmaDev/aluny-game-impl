@@ -5,38 +5,38 @@ import fr.aluny.gameapi.chat.ChatPreProcessor;
 import fr.aluny.gameapi.chat.ChatProcessor;
 import fr.aluny.gameapi.chat.ChatService;
 import fr.aluny.gameapi.chat.ProcessedChat;
-import fr.aluny.gameapi.timer.RunnableHelper;
+import fr.aluny.gameapi.service.ServiceManager;
+import fr.aluny.gameimpl.chat.processor.ChatColorPreProcessor;
+import fr.aluny.gameimpl.chat.processor.DefaultChatProcessor;
+import fr.aluny.gameimpl.chat.processor.MutePreProcessor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.regex.Pattern;
-import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 public class ChatServiceImpl implements ChatService {
 
-    private static final String DEFAULT_STRING = "§"; //This String is impossible to write in minecraft, so it is used as default
+    private static final char DEFAULT_PREFIX = '§'; //This char is impossible to write in minecraft, so it is used as default
 
-    private final Map<String, List<ChatPreProcessor>> chatPreProcessors = new HashMap<>();
-    private final Map<String, ChatProcessor>          chatProcessors    = new HashMap<>();
-    private final Map<UUID, IdentifiedCallback>       chatCallbacks     = new HashMap<>();
+    private final Map<Character, List<ChatPreProcessor>> chatPreProcessors = new HashMap<>();
+    private final Map<Character, ChatProcessor>          chatProcessors    = new HashMap<>();
+    private final Map<UUID, IdentifiedCallback>          chatCallbacks     = new HashMap<>();
 
-    private final RunnableHelper runnableHelper;
+    private final ServiceManager serviceManager;
 
-    public ChatServiceImpl(RunnableHelper runnableHelper) {
-        this.runnableHelper = runnableHelper;
+    public ChatServiceImpl(ServiceManager serviceManager) {
+        this.serviceManager = serviceManager;
     }
 
     @Override
     public void registerDefaultChatPreProcessor(ChatPreProcessor chatPreProcessor) {
-        registerChatPreProcessor(DEFAULT_STRING, chatPreProcessor);
+        registerChatPreProcessor(DEFAULT_PREFIX, chatPreProcessor);
     }
 
     @Override
-    public void registerChatPreProcessor(String prefix, ChatPreProcessor chatPreProcessor) {
+    public void registerChatPreProcessor(char prefix, ChatPreProcessor chatPreProcessor) {
         List<ChatPreProcessor> list = chatPreProcessors.getOrDefault(prefix, new ArrayList<>());
         list.add(chatPreProcessor);
         chatPreProcessors.put(prefix, list);
@@ -44,21 +44,21 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void setDefaultChatProcessor(ChatProcessor chatProcessor) {
-        chatProcessors.put(DEFAULT_STRING, chatProcessor);
+        chatProcessors.put(DEFAULT_PREFIX, chatProcessor);
     }
 
     @Override
-    public void setChatProcessor(String prefix, ChatProcessor chatProcessor) {
+    public void setChatProcessor(char prefix, ChatProcessor chatProcessor) {
         chatProcessors.put(prefix, chatProcessor);
     }
 
     @Override
-    public void unregisterAllChatPreProcessor(String prefix) {
+    public void unregisterAllChatPreProcessor(char prefix) {
         chatPreProcessors.remove(prefix);
     }
 
     @Override
-    public void unregisterChatPreProcessor(String prefix, ChatPreProcessor chatPreProcessor) {
+    public void unregisterChatPreProcessor(char prefix, ChatPreProcessor chatPreProcessor) {
         List<ChatPreProcessor> list = chatPreProcessors.getOrDefault(prefix, new ArrayList<>());
         list.remove(chatPreProcessor);
         chatPreProcessors.put(prefix, list);
@@ -66,11 +66,11 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public void unregisterDefaultChatProcessor() {
-        chatProcessors.remove(DEFAULT_STRING);
+        chatProcessors.remove(DEFAULT_PREFIX);
     }
 
     @Override
-    public void unregisterChatProcessor(String prefix) {
+    public void unregisterChatProcessor(char prefix) {
         chatProcessors.remove(prefix);
     }
 
@@ -83,7 +83,7 @@ public class ChatServiceImpl implements ChatService {
         UUID callbackId = UUID.randomUUID();
         chatCallbacks.put(uuid, new IdentifiedCallback(callbackId, callback));
 
-        runnableHelper.runLaterAsynchronously(() -> {
+        serviceManager.getRunnableHelper().runLaterAsynchronously(() -> {
             if (chatCallbacks.containsKey(uuid) && chatCallbacks.get(uuid).uuid().equals(callbackId))
                 chatCallbacks.remove(uuid).callback().onError();
         }, 600);
@@ -103,63 +103,56 @@ public class ChatServiceImpl implements ChatService {
         return true;
     }
 
-    public ProcessedChat acceptPreProcess(ProcessedChat processedChat) {
-        String c = String.valueOf(processedChat.getGlobalMessage().charAt(0));
-
-        if (chatPreProcessors.containsKey(c)) {
-            for (ChatPreProcessor chatPreProcessor : chatPreProcessors.get(c)) {
-                processedChat = chatPreProcessor.accept(processedChat);
+    public void acceptPreProcess(char prefix, ProcessedChat processedChat) {
+        if (this.chatPreProcessors.containsKey(prefix)) {
+            for (ChatPreProcessor chatPreProcessor : this.chatPreProcessors.get(prefix)) {
+                chatPreProcessor.accept(processedChat);
 
                 if (processedChat.isCancelled())
-                    return null;
+                    return;
+            }
+        } else if (this.chatPreProcessors.containsKey(DEFAULT_PREFIX)) {
+            for (ChatPreProcessor chatPreProcessor : this.chatPreProcessors.get(DEFAULT_PREFIX)) {
+                chatPreProcessor.accept(processedChat);
+
+                if (processedChat.isCancelled())
+                    return;
             }
         }
-
-        if (chatPreProcessors.containsKey(DEFAULT_STRING)) {
-            for (ChatPreProcessor chatPreProcessor : chatPreProcessors.get(DEFAULT_STRING)) {
-                processedChat = chatPreProcessor.accept(processedChat);
-
-                if (processedChat == null)
-                    return null;
-            }
-        }
-
-        return processedChat;
     }
 
     public void acceptProcess(AsyncPlayerChatEvent event) {
-        ProcessedChat processedChat = new ProcessedChat(event.getPlayer(), event.getMessage());
+        char prefix = event.getMessage().charAt(0);
 
-        processedChat = this.acceptPreProcess(processedChat);
+        String message;
 
-        if (processedChat == null || processedChat.isCancelled())
+        if (this.chatPreProcessors.containsKey(prefix) || this.chatProcessors.containsKey(prefix)) {
+            message = event.getMessage().substring(1);
+
+            if (message.isEmpty())
+                return;
+        } else {
+            message = event.getMessage();
+            prefix = DEFAULT_PREFIX;
+        }
+
+        ProcessedChat processedChat = new ProcessedChat(serviceManager.getGamePlayerService().getPlayer(event.getPlayer()), message);
+
+        acceptPreProcess(prefix, processedChat);
+
+        if (processedChat.isCancelled())
             return;
 
-        String c = String.valueOf(event.getMessage().charAt(0));
-
-        if (chatProcessors.containsKey(c))
-            chatProcessors.get(c).accept(processedChat);
-        else if (chatProcessors.containsKey(DEFAULT_STRING))
-            chatProcessors.get(DEFAULT_STRING).accept(processedChat);
+        if (chatProcessors.containsKey(prefix))
+            chatProcessors.get(prefix).accept(processedChat);
     }
 
     @Override
     public void initialize() {
-        /*registerDefaultChatPreProcessor(new DefaultChatMutePreProcessor());
-        registerDefaultChatPreProcessor(new DefaultChatColorPreProcessor());
-        registerDefaultChatPreProcessor(new DefaultChatMentionPreProcessor());
-        setDefaultChatProcessor(new DefaultChatProcessor("defaultChatFormat"));*/
+        registerDefaultChatPreProcessor(new MutePreProcessor(serviceManager.getModerationService()));
+        registerDefaultChatPreProcessor(new ChatColorPreProcessor(serviceManager.getPlayerAccountService()));
 
-        registerDefaultChatPreProcessor(processedChat -> {
-            /*processedChat.setGlobalMessage(ChatColor.of("#996633") + processedChat.getGlobalMessage());
-            return processedChat;*/
-            //String s = "<c:#42f5b6>Coucou à tous <c:#f5428a>les amis !";
-            Pattern pattern = Pattern.compile("<c:#([a-fA-F0-9]{6})>");
-            processedChat.setGlobalMessage(pattern.matcher(processedChat.getGlobalMessage()).replaceAll(matchResult -> ChatColor.of("#" + matchResult.group(1)).toString()));
-            return processedChat;
-        });
-
-        setDefaultChatProcessor(processedChat -> Bukkit.broadcastMessage(processedChat.getSender().getName() + " : " + processedChat.getGlobalMessage()));
+        setDefaultChatProcessor(new DefaultChatProcessor(serviceManager.getTranslationService(), serviceManager.getPlayerAccountService()));
     }
 
     private record IdentifiedCallback(UUID uuid, ChatCallback callback) {
