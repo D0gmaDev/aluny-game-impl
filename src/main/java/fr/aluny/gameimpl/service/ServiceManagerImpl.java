@@ -3,6 +3,7 @@ package fr.aluny.gameimpl.service;
 import fr.aluny.gameapi.chat.ChatService;
 import fr.aluny.gameapi.command.CommandService;
 import fr.aluny.gameapi.message.MessageService;
+import fr.aluny.gameapi.moderation.ModerationService;
 import fr.aluny.gameapi.moderation.VanishService;
 import fr.aluny.gameapi.player.GamePlayerService;
 import fr.aluny.gameapi.player.PlayerAccountService;
@@ -77,6 +78,11 @@ public class ServiceManagerImpl implements ServiceManager {
     @Override
     public MessageService getMessageService() {
         return getService(MessageService.class);
+    }
+
+    @Override
+    public ModerationService getModerationService() {
+        return getService(ModerationService.class);
     }
 
     @Override

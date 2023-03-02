@@ -4,10 +4,13 @@ import fr.aluny.alunyapi.generated.ApiClient;
 import fr.aluny.alunyapi.generated.ApiException;
 import fr.aluny.alunyapi.generated.api.PlayerControllerApi;
 import fr.aluny.alunyapi.generated.model.PlayerDTO;
+import fr.aluny.alunyapi.generated.model.PlayerDetailsDTO;
 import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.translation.Locale;
+import fr.aluny.gameimpl.moderation.sanction.PlayerSanction;
+import fr.aluny.gameimpl.player.DetailedPlayerAccount;
 import fr.aluny.gameimpl.player.PlayerAccountImpl;
 import java.util.List;
 import java.util.Optional;
@@ -29,19 +32,7 @@ public class PlayerAPI {
         try {
 
             PlayerDTO player = apiInstance.getPlayer(uuid);
-
-            Optional<Locale> locale = serviceManager.getTranslationService().getLocale(player.getLocale());
-
-            if (locale.isEmpty())
-                throw new IllegalStateException("locale: " + player.getLocale());
-
-            if (player.getRankIds() == null)
-                throw new IllegalStateException("rankIds is null");
-
-            Set<Rank> ranks = player.getRankIds().stream().map(id -> serviceManager.getRankService().getRankById(id).orElseThrow(() -> new IllegalStateException("rank: " + id))).collect(Collectors.toUnmodifiableSet());
-
-            PlayerAccountImpl playerAccount = new PlayerAccountImpl(player.getUuid(), player.getUsername(), locale.get(), ranks, player.getCreatedAt());
-            return Optional.of(playerAccount);
+            return Optional.of(new PlayerAccountImpl(player.getUuid(), player.getUsername(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt()));
 
         } catch (ApiException e) {
             System.err.println("Exception when calling PlayerControllerApi#getPlayer");
@@ -59,19 +50,9 @@ public class PlayerAPI {
     public List<PlayerAccount> searchPlayersByName(String name) {
         try {
 
-            return apiInstance.searchPlayers(name).stream().map(player -> {
-                Optional<Locale> locale = serviceManager.getTranslationService().getLocale(player.getLocale());
-
-                if (locale.isEmpty())
-                    throw new IllegalStateException("locale: " + player.getLocale());
-
-                if (player.getRankIds() == null)
-                    throw new IllegalStateException("rankIds is null");
-
-                Set<Rank> ranks = player.getRankIds().stream().map(id -> serviceManager.getRankService().getRankById(id).orElseThrow(() -> new IllegalStateException("rank: " + id))).collect(Collectors.toUnmodifiableSet());
-
-                return new PlayerAccountImpl(player.getUuid(), player.getUsername(), locale.get(), ranks, player.getCreatedAt());
-            }).collect(Collectors.toList());
+            return apiInstance.searchPlayers(name).stream()
+                    .map(player -> new PlayerAccountImpl(player.getUuid(), player.getUsername(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt()))
+                    .collect(Collectors.toList());
 
         } catch (ApiException e) {
             System.err.println("Exception when calling PlayerControllerApi#getPlayer");
@@ -88,5 +69,38 @@ public class PlayerAPI {
 
     public Optional<PlayerAccount> getPlayerByName(String name) {
         return searchPlayersByName(name).stream().filter(playerAccount -> playerAccount.getName().equalsIgnoreCase(name)).findAny();
+    }
+
+    public Optional<DetailedPlayerAccount> getDetailedPlayer(UUID uuid) {
+        try {
+
+            PlayerDetailsDTO player = apiInstance.getPlayerDetails(uuid);
+
+            List<PlayerSanction> sanctions = player.getCurrentSanctions().stream().map(PlayerSanctionAPI::buildSanction).toList();
+
+            return Optional.of(new DetailedPlayerAccount(player.getUuid(), player.getUsername(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt(), sanctions));
+
+        } catch (ApiException e) {
+            System.err.println("Exception when calling PlayerControllerApi#getPlayerDetails");
+            System.err.println("Status code: " + e.getCode());
+            System.err.println("Reason: " + e.getResponseBody());
+            System.err.println("Response headers: " + e.getResponseHeaders());
+            e.printStackTrace();
+            return Optional.empty();
+        } catch (IllegalStateException e) {
+            System.err.println("Exception when parsing '" + uuid + "' PlayerDetailsDTO: " + e.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private Locale parseLocale(String code) {
+        return serviceManager.getTranslationService().getLocale(code).orElseThrow(() -> new IllegalStateException("locale: " + code));
+    }
+
+    private Set<Rank> parseRanks(Set<Integer> ids) {
+        if (ids == null)
+            throw new IllegalStateException("rankIds is null");
+
+        return ids.stream().map(id -> serviceManager.getRankService().getRankById(id).orElseThrow(() -> new IllegalStateException("rank: " + id))).collect(Collectors.toUnmodifiableSet());
     }
 }

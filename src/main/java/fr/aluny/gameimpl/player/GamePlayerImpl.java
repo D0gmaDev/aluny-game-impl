@@ -3,6 +3,7 @@ package fr.aluny.gameimpl.player;
 import fr.aluny.gameapi.message.MessageHandler;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.PlayerAccount;
+import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameapi.scoreboard.PlayerScoreboard;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
 import fr.aluny.gameimpl.message.PlayerMessageHandler;
@@ -26,9 +27,12 @@ public class GamePlayerImpl implements GamePlayer {
     private       PlayerScoreboard scoreboard;
     private       boolean          vanished;
 
+    private final Rank cachedHighestRank;
+
     public GamePlayerImpl(Player player, PlayerAccount playerBean) {
         this.player = player;
         this.messageHandler = new PlayerMessageHandler(player, playerBean.getLocale());
+        this.cachedHighestRank = playerBean.getHighestRank();
     }
 
     @Override
@@ -199,5 +203,9 @@ public class GamePlayerImpl implements GamePlayer {
     @Override
     public MessageHandler getMessageHandler() {
         return this.messageHandler;
+    }
+
+    public Rank getCachedHighestRank() {
+        return this.cachedHighestRank;
     }
 }

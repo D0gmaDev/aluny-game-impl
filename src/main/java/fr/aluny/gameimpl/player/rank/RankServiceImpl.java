@@ -12,16 +12,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.bukkit.permissions.PermissionAttachment;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public class RankServiceImpl implements RankService {
 
+    private final JavaPlugin                plugin;
     private final RankAPI                   rankAPI;
     private final ServiceManager            serviceManager;
     private final ServerSettings            serverSettings;
     private final Map<Rank, ScoreboardTeam> ranks     = new HashMap<>();
     private final Map<Integer, Rank>        ranksById = new HashMap<>();
 
-    public RankServiceImpl(RankAPI rankAPI, ServiceManager serviceManager, ServerSettings serverSettings) {
+    public RankServiceImpl(JavaPlugin plugin, RankAPI rankAPI, ServiceManager serviceManager, ServerSettings serverSettings) {
+        this.plugin = plugin;
         this.rankAPI = rankAPI;
         this.serviceManager = serviceManager;
         this.serverSettings = serverSettings;
@@ -47,6 +51,11 @@ public class RankServiceImpl implements RankService {
     }
 
     public void onPlayerJoin(GamePlayer gamePlayer, PlayerAccount playerAccount) {
-        this.ranks.get(playerAccount.getHighestRank()).addPlayer(gamePlayer);
+        if (this.serverSettings.doesShowRank())
+            this.ranks.get(playerAccount.getHighestRank()).addPlayer(gamePlayer);
+
+        PermissionAttachment permissionAttachment = gamePlayer.getPlayer().addAttachment(this.plugin);
+        serviceManager.getRunnableHelper().runAsynchronously(() -> playerAccount.getRanks().forEach(rank -> rank.getPermissions().forEach(permission -> permissionAttachment.setPermission(permission, true))));
+        gamePlayer.getPlayer().updateCommands();
     }
 }
