@@ -185,7 +185,7 @@ public class FilteredNBTInputStream extends NBTInputStream {
     private void skipValue(TagType type) throws IOException {
         int bytesToSkip;
         switch (type) {
-            case LIST:
+            case LIST -> {
                 TagType elementType = readTagId();
                 int length = readInt();
 
@@ -196,8 +196,8 @@ public class FilteredNBTInputStream extends NBTInputStream {
                     }
                 }
                 return;
-
-            case COMPOUND:
+            }
+            case COMPOUND -> {
                 // Skip each child tag in the compound.
                 TagType childType;
                 while ((childType = readTagId()) != TagType.END) {
@@ -205,43 +205,21 @@ public class FilteredNBTInputStream extends NBTInputStream {
                     skipValue(childType);
                 }
                 return;
-
-            case STRING:
+            }
+            case STRING -> {
                 skipString();
                 return;
-
-            case BYTE:
-                bytesToSkip = 1;
-                break;
-
-            case SHORT:
-                bytesToSkip = 2;
-                break;
-
-            case FLOAT:
-            case INT:
-                bytesToSkip = 4;
-                break;
-
-            case LONG:
-            case DOUBLE:
-                bytesToSkip = 8;
-                break;
-
-            case BYTE_ARRAY:
-                bytesToSkip = readInt();
-                break;
-
-            case INT_ARRAY:
-                bytesToSkip = readInt() * 4;
-                break;
-
-            case LONG_ARRAY:
-                bytesToSkip = readInt() * 8;
-                break;
-
-            default:
+            }
+            case BYTE -> bytesToSkip = 1;
+            case SHORT -> bytesToSkip = 2;
+            case FLOAT, INT -> bytesToSkip = 4;
+            case LONG, DOUBLE -> bytesToSkip = 8;
+            case BYTE_ARRAY -> bytesToSkip = readInt();
+            case INT_ARRAY -> bytesToSkip = readInt() * 4;
+            case LONG_ARRAY -> bytesToSkip = readInt() * 8;
+            default -> {
                 return;
+            }
         }
 
         skipBytes(bytesToSkip);

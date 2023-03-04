@@ -12,9 +12,11 @@ import de.studiocode.invui.window.impl.single.SimpleWindow;
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
+import fr.aluny.gameapi.command.TabCompleter;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.service.ServiceManager;
+import fr.aluny.gameapi.utils.GameUtils;
 import fr.aluny.gameapi.utils.TimeUtils;
 import fr.aluny.gameimpl.api.PlayerAPI;
 import fr.aluny.gameimpl.api.PlayerSanctionAPI;
@@ -22,13 +24,21 @@ import fr.aluny.gameimpl.moderation.sanction.DetailedPlayerSanction;
 import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.time.Duration;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 
-@CommandInfo(name = "casier", permission = "fr.aluny.command.casier")
+@CommandInfo(name = "casier", permission = "fr.aluny.command.casier", asyncCall = true)
 public class CasierCommand extends Command {
+
+    private static final String CASIER_STRUCTURE = """
+            # # # # h # # # #
+            # x x x x x x x #
+            # x x x x x x x #
+            # x x x x x x x #
+            # # # < # > # # #
+            """;
 
     private final PlayerSanctionAPI playerSanctionAPI;
     private final PlayerAPI         playerAPI;
@@ -49,35 +59,33 @@ public class CasierCommand extends Command {
 
             Item headItem = new SimpleItem(new SkullBuilder(playerAccount.getName())
                     .setDisplayName(playerAccount.getHighestRank().getPrefix() + playerAccount.getName())
-                    .addLoreLines(color + "1ère connexion: §7" + TimeUtils.formatDateToCET(playerAccount.getCreationDate(), Locale.FRENCH)));
+                    .addLoreLines(color + "1ère connexion: §7" + TimeUtils.formatDateToCET(playerAccount.getCreationDate())));
 
             List<DetailedPlayerSanction> playerDetailedSanctions = playerSanctionAPI.getPlayerDetailedSanctions(playerAccount, 30, 0);
 
-            List<Item> items = playerDetailedSanctions.stream().map(sanction -> new AsyncItem(new ItemBuilder(Material.BOOK).setDisplayName("§7Chargement..."), () -> new ItemBuilder(getMaterial(sanction.getSanctionType()))
+            List<Item> items = playerDetailedSanctions.stream().sorted().map(sanction -> new AsyncItem(new ItemBuilder(Material.BOOK).setDisplayName("§7Chargement..."), () -> new ItemBuilder(getMaterial(sanction.getSanctionType()))
                     .setDisplayName(ChatColor.of("#70cc89") + sanction.getSanctionType().name() + " §7(#" + sanction.getId() + ")")
                     .addLoreLines(
                             color + "Raison: §7" + sanction.getDescription(),
                             color + "Auteur: §7" + playerAPI.getPlayer(sanction.getAuthor()).map(PlayerAccount::getName).orElse("Erreur..."),
-                            color + "Date: §7" + TimeUtils.formatDateToCET(sanction.getStartAt(), Locale.FRENCH),
+                            color + "Date: §7" + TimeUtils.formatDateToCET(sanction.getStartAt()),
                             color + "Durée: §7" + TimeUtils.format(Duration.between(sanction.getStartAt(), sanction.getEndAt())),
                             " ",
                             color + "Etat: §7" + (sanction.isCanceled() ? "§cAnnulé" : (sanction.isActive() ? "§aEn cours" : "§7Expiré"))
                     ))).collect(Collectors.toList());
 
-            GUI gui = new GUIBuilder<>(GUIType.PAGED_ITEMS)
-                    .setStructure(
-                            "# # # # h # # # #",
-                            "# x x x x x x x #",
-                            "# x x x x x x x #",
-                            "# x x x x x x x #",
-                            "# # # < # > # # #")
-                    .addIngredient('h', headItem).setItems(items).build();
+            GUI gui = new GUIBuilder<>(GUIType.PAGED_ITEMS).setStructure(9, 5, CASIER_STRUCTURE).addIngredient('h', headItem).setItems(items).build();
 
             SimpleWindow simpleWindow = new SimpleWindow(player.getPlayer(), color + "Casier de " + playerAccount.getName(), gui);
-            simpleWindow.show();
+            serviceManager.getRunnableHelper().runSynchronously(simpleWindow::show);
 
         }, () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", name));
 
+    }
+
+    @TabCompleter
+    public List<String> tabCompleter(Player player, String alias, String[] args) {
+        return args.length == 1 ? GameUtils.getOnlinePlayersPrefixed(args[0]) : List.of();
     }
 
     private Material getMaterial(SanctionType sanctionType) {

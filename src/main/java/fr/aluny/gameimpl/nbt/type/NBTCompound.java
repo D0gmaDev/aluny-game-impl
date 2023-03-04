@@ -457,34 +457,21 @@ public class NBTCompound extends AbstractMap<String, Object> {
 
     private static String tagToString(Object value) {
         TagType tagType = TagType.fromObject(value);
-        switch (tagType) {
-            case BYTE:
-                return byteToString((Byte) value);
-            case SHORT:
-                return shortToString((Short) value);
-            case INT:
-                return intToString((Integer) value);
-            case LONG:
-                return longToString((Long) value);
-            case FLOAT:
-                return floatToString((Float) value);
-            case DOUBLE:
-                return doubleToString((Double) value);
-            case BYTE_ARRAY:
-                return byteArrayToString((byte[]) value);
-            case STRING:
-                return stringTagToString((String) value);
-            case LIST:
-                return listToString((NBTList) value);
-            case COMPOUND:
-                return value.toString();
-            case INT_ARRAY:
-                return intArrayToString((int[]) value);
-            case LONG_ARRAY:
-                return longArrayToString((long[]) value);
-            default:
-                return "";
-        }
+        return switch (tagType) {
+            case END -> "";
+            case BYTE -> byteToString((Byte) value);
+            case SHORT -> shortToString((Short) value);
+            case INT -> intToString((Integer) value);
+            case LONG -> longToString((Long) value);
+            case FLOAT -> floatToString((Float) value);
+            case DOUBLE -> doubleToString((Double) value);
+            case BYTE_ARRAY -> byteArrayToString((byte[]) value);
+            case STRING -> stringTagToString((String) value);
+            case LIST -> listToString((NBTList) value);
+            case COMPOUND -> value.toString();
+            case INT_ARRAY -> intArrayToString((int[]) value);
+            case LONG_ARRAY -> longArrayToString((long[]) value);
+        };
     }
 
     private static String byteToString(byte value) {

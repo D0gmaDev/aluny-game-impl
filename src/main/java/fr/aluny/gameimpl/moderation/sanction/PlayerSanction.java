@@ -4,7 +4,7 @@ import fr.aluny.gameapi.utils.TimeUtils;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-public class PlayerSanction {
+public class PlayerSanction implements Comparable<PlayerSanction> {
 
     private final int  id;
     private final UUID player;
@@ -66,5 +66,10 @@ public class PlayerSanction {
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
                 '}';
+    }
+
+    @Override
+    public int compareTo(PlayerSanction o) {
+        return getStartAt().compareTo(o.getStartAt());
     }
 }

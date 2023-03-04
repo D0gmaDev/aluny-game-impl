@@ -28,6 +28,7 @@ public class KickCommand extends Command {
     @Default
     public void defaultContext(GamePlayer player, String name, String[] args) {
 
+        //TODO check isOnline
         serviceManager.getPlayerAccountService().getPlayerAccountByName(name).ifPresentOrElse(playerAccount -> {
 
             if (args.length == 0) {
