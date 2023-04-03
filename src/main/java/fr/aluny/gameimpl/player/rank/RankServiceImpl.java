@@ -55,7 +55,9 @@ public class RankServiceImpl implements RankService {
             this.ranks.get(playerAccount.getHighestRank()).addPlayer(gamePlayer);
 
         PermissionAttachment permissionAttachment = gamePlayer.getPlayer().addAttachment(this.plugin);
-        serviceManager.getRunnableHelper().runAsynchronously(() -> playerAccount.getRanks().forEach(rank -> rank.getPermissions().forEach(permission -> permissionAttachment.setPermission(permission, true))));
-        gamePlayer.getPlayer().updateCommands();
+        serviceManager.getRunnableHelper().runAsynchronously(() -> {
+            playerAccount.getRanks().forEach(rank -> rank.getPermissions().forEach(permission -> permissionAttachment.setPermission(permission, true)));
+            gamePlayer.getPlayer().updateCommands();
+        });
     }
 }
