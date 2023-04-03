@@ -58,4 +58,16 @@ public class PlayerAccountImpl implements PlayerAccount {
     public Rank getHighestRank() {
         return this.highestRank;
     }
+
+    @Override
+    public String toString() {
+        return "PlayerAccountImpl{" +
+                "uuid=" + uuid +
+                ", name='" + name + '\'' +
+                ", locale=" + locale +
+                ", ranks=" + ranks +
+                ", creationDate=" + creationDate +
+                ", highestRank=" + highestRank +
+                '}';
+    }
 }

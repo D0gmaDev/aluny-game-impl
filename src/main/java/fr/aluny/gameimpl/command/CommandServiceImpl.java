@@ -64,7 +64,7 @@ public class CommandServiceImpl implements CommandService {
             subCommands.add(new SubCommandWrapper(subCommandInfo.name(), subCommandInfo.permission(), subCommandInfo.suggest(), method));
         }
 
-        this.commandManager.register(new BukkitCommandWrapper(command, commandInfo.name(), commandInfo.aliases(), commandInfo.permission(), defaultMethod, tabCompleter, subCommands));
+        this.commandManager.register(new BukkitCommandWrapper(command, commandInfo.name(), commandInfo.aliases(), commandInfo.permission(), defaultMethod, tabCompleter, subCommands, commandInfo.asyncCall()));
     }
 
     @Override
@@ -84,8 +84,9 @@ public class CommandServiceImpl implements CommandService {
         private final Method                  defaultMethod;
         private final Method                  tabCompleter;
         private final List<SubCommandWrapper> subCommands;
+        private final boolean                 asyncCall;
 
-        BukkitCommandWrapper(Command command, String name, String[] aliases, String defaultPermission, Method defaultMethod, Method tabCompleter, List<SubCommandWrapper> subCommands) {
+        BukkitCommandWrapper(Command command, String name, String[] aliases, String defaultPermission, Method defaultMethod, Method tabCompleter, List<SubCommandWrapper> subCommands, boolean asyncCall) {
             super(name, "", "", Arrays.asList(aliases));
             this.setPermission(defaultPermission);
 
@@ -94,6 +95,7 @@ public class CommandServiceImpl implements CommandService {
             this.defaultMethod = defaultMethod;
             this.tabCompleter = tabCompleter;
             this.subCommands = subCommands;
+            this.asyncCall = asyncCall;
         }
 
         @Override
@@ -112,12 +114,12 @@ public class CommandServiceImpl implements CommandService {
                 List<SubCommandWrapper> validSubCommands = subCommands.stream().filter(subCommand -> subCommand.name.equalsIgnoreCase(args[0])).toList();
                 if (validSubCommands.size() == 0) {
                     if (defaultMethod != null)
-                        CommandInvoker.invoke(gamePlayer, command, defaultMethod, args);
+                        invokeCommand(gamePlayer, command, defaultMethod, args);
                 } else
                     validSubCommands.forEach(subCommand -> {
                         if (subCommand.permission.equalsIgnoreCase("") || player.hasPermission(subCommand.permission)) {
                             String[] newArgs = Arrays.stream(args).skip(1).toArray(String[]::new);
-                            CommandInvoker.invoke(gamePlayer, command, subCommand.method, newArgs);
+                            invokeCommand(gamePlayer, command, subCommand.method, newArgs);
                         } else {
                             gamePlayer.getMessageHandler().sendMessage("command_validation_no_permission");
                         }
@@ -126,9 +128,16 @@ public class CommandServiceImpl implements CommandService {
             }
 
             if (defaultMethod != null)
-                CommandInvoker.invoke(gamePlayer, command, defaultMethod, args);
+                invokeCommand(gamePlayer, command, defaultMethod, args);
 
             return true;
+        }
+
+        private void invokeCommand(GamePlayer gamePlayer, Command command, Method method, String[] args) {
+            if (this.asyncCall)
+                serviceManager.getRunnableHelper().runAsynchronously(() -> CommandInvoker.invoke(gamePlayer, command, method, args));
+            else
+                CommandInvoker.invoke(gamePlayer, command, method, args);
         }
 
         @SuppressWarnings("unchecked")

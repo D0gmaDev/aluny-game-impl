@@ -18,8 +18,8 @@ class CommandInvoker {
         PARSER_MAP.put(UUID.class, new ArgumentParser(UUID::fromString, "command_validation_not_a_uuid"));
         PARSER_MAP.put(Long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
         PARSER_MAP.put(long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
-        PARSER_MAP.put(Integer.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
-        PARSER_MAP.put(int.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
+        PARSER_MAP.put(Integer.class, new ArgumentParser(Integer::parseInt, "command_validation_not_an_integer"));
+        PARSER_MAP.put(int.class, new ArgumentParser(Integer::parseInt, "command_validation_not_an_integer"));
         PARSER_MAP.put(Double.class, new ArgumentParser(Double::parseDouble, "command_validation_not_a_number"));
         PARSER_MAP.put(double.class, new ArgumentParser(Double::parseDouble, "command_validation_not_a_number"));
         PARSER_MAP.put(Player.class, new ArgumentParser(s -> Optional.ofNullable(Bukkit.getPlayer(s)).orElseThrow(IllegalArgumentException::new), "command_validation_player_not_found"));

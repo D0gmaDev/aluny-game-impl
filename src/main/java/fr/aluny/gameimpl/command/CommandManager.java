@@ -105,6 +105,7 @@ public class CommandManager {
 
         registerCommandToCommandMap(this.plugin.getName(), command);
         this.registered.put(name, command);
+        syncCommand();
     }
 
     /**
@@ -119,6 +120,7 @@ public class CommandManager {
         } catch (ReflectiveOperationException e) {
             this.plugin.getLogger().log(Level.WARNING, "Something wrong when unregister the command", e);
         }
+        syncCommand();
     }
 
     /**
@@ -144,6 +146,7 @@ public class CommandManager {
             }
         });
         this.registered.clear();
+        syncCommand();
     }
 
     /**

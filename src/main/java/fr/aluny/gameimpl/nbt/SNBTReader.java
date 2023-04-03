@@ -137,16 +137,11 @@ public final class SNBTReader {
     private static Object read(Reader reader, boolean internNames, boolean internValues) throws IOException {
         final int firstChar = peekChar(reader);
 
-        switch (firstChar) {
-            case COMPOUND_START:
-                return readCompound(reader, internNames, internValues);
-
-            case ARRAY_START:
-                return readIterable(reader, internNames, internValues);
-
-            default:
-                return readLiteral(reader, internValues);
-        }
+        return switch (firstChar) {
+            case COMPOUND_START -> readCompound(reader, internNames, internValues);
+            case ARRAY_START -> readIterable(reader, internNames, internValues);
+            default -> readLiteral(reader, internValues);
+        };
     }
 
     /**
@@ -205,23 +200,12 @@ public final class SNBTReader {
         final TagType arrayType;
 
         if (thirdChar == ARRAY_TYPE_INDICATOR) {
-            switch (secondChar) {
-                // TODO: Add constants for these
-                case 'B':
-                    arrayType = TagType.BYTE_ARRAY;
-                    break;
-
-                case 'I':
-                    arrayType = TagType.INT_ARRAY;
-                    break;
-
-                case 'L':
-                    arrayType = TagType.LONG_ARRAY;
-                    break;
-
-                default:
-                    throw new NBTParseException("Unknown SNBT array type");
-            }
+            arrayType = switch (secondChar) {
+                case 'B' -> TagType.BYTE_ARRAY;
+                case 'I' -> TagType.INT_ARRAY;
+                case 'L' -> TagType.LONG_ARRAY;
+                default -> throw new NBTParseException("Unknown SNBT array type");
+            };
         } else {
             reader.reset();
             return readList(reader, internNames, internValues);
