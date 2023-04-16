@@ -1,15 +1,10 @@
 package fr.aluny.gameimpl.moderation.command;
 
-import de.studiocode.invui.gui.GUI;
-import de.studiocode.invui.gui.builder.GUIBuilder;
-import de.studiocode.invui.gui.builder.guitype.GUIType;
-import de.studiocode.invui.item.builder.ItemBuilder;
-import de.studiocode.invui.item.impl.SimpleItem;
-import de.studiocode.invui.window.impl.single.SimpleWindow;
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
 import fr.aluny.gameapi.command.TabCompleter;
+import fr.aluny.gameapi.message.MessageService;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.translation.Locale;
@@ -18,9 +13,15 @@ import fr.aluny.gameapi.utils.TimeUtils;
 import fr.aluny.gameimpl.api.PlayerSanctionAPI;
 import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.util.List;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import xyz.xenondevs.invui.gui.Gui;
+import xyz.xenondevs.invui.item.builder.ItemBuilder;
+import xyz.xenondevs.invui.item.impl.SimpleItem;
+import xyz.xenondevs.invui.window.Window;
 
 @CommandInfo(name = "ban", permission = "fr.aluny.command.ban")
 public class BanCommand extends Command {
@@ -48,7 +49,7 @@ public class BanCommand extends Command {
                 SimpleItem validationItem = new SimpleItem(new ItemBuilder(Material.LIME_CANDLE).setDisplayName("§aValider"), click -> {
                     click.getPlayer().closeInventory();
                     playerSanctionAPI.applySanction(playerAccount, player, SanctionType.BAN, duration, String.join(" ", args)).ifPresent(sanction ->
-                            player.getMessageHandler().sendMessage("moderation_successfully_banned", playerAccount.getName(), String.valueOf(sanction.getId())));
+                            player.getMessageHandler().sendComponentMessage("moderation_successfully_banned", Placeholder.unparsed("name", playerAccount.getName()), Placeholder.unparsed("id", String.valueOf(sanction.getId()))));
                     serviceManager.getProxyMessagingService().kickFromProxy(player.getPlayer(), playerAccount.getName(), getReasonString(playerAccount.getLocale()));
                 });
 
@@ -59,10 +60,9 @@ public class BanCommand extends Command {
 
                 SimpleItem cancelItem = new SimpleItem(new ItemBuilder(Material.RED_CANDLE).setDisplayName("§cAnnuler"), click -> click.getPlayer().closeInventory());
 
-                GUI gui = new GUIBuilder<>(GUIType.NORMAL).setStructure("v.i.a").addIngredient('v', validationItem).addIngredient('i', infoItem).addIngredient('a', cancelItem).build();
+                Gui gui = Gui.normal().setStructure("v.i.a").addIngredient('v', validationItem).addIngredient('i', infoItem).addIngredient('a', cancelItem).build();
 
-                SimpleWindow simpleWindow = new SimpleWindow(player.getPlayer(), color + "Confirmation du bannissement", gui);
-                simpleWindow.show();
+                Window.single().setTitle(color + "Confirmation du bannissement").setGui(gui).open(player.getPlayer());
 
             }, () -> player.getMessageHandler().sendMessage("command_validation_invalid_duration", durationString));
 
@@ -75,7 +75,7 @@ public class BanCommand extends Command {
     }
 
     private String getReasonString(Locale locale) {
-        return locale.translate("moderation_ban_screen");
+        return LegacyComponentSerializer.legacySection().serialize(MessageService.COMPONENT_PARSER.deserialize(locale.translate("moderation_ban_screen")));
     }
 
 }

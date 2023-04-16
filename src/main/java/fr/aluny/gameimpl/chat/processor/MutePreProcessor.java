@@ -3,7 +3,7 @@ package fr.aluny.gameimpl.chat.processor;
 import fr.aluny.gameapi.chat.ChatPreProcessor;
 import fr.aluny.gameapi.chat.ProcessedChat;
 import fr.aluny.gameapi.moderation.ModerationService;
-import fr.aluny.gameapi.utils.TimeUtils;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 
 public class MutePreProcessor implements ChatPreProcessor {
 
@@ -17,7 +17,7 @@ public class MutePreProcessor implements ChatPreProcessor {
     public void accept(ProcessedChat chat) {
         if (moderationService.isMuted(chat.getSender().getUuid())) {
             chat.setCancelled(true);
-            chat.getSender().getMessageHandler().sendMessage("moderation_cancelled_muted", TimeUtils.formatDateToCET(moderationService.getUnMuteDate(chat.getSender().getUuid())));
+            chat.getSender().getMessageHandler().sendComponentMessage("moderation_cancelled_muted", Formatter.date("date", moderationService.getUnMuteDate(chat.getSender().getUuid())));
         }
     }
 }

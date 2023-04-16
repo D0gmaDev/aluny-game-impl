@@ -1,6 +1,5 @@
 package fr.aluny.gameimpl;
 
-import de.studiocode.invui.InvUI;
 import fr.aluny.alunyapi.generated.ApiClient;
 import fr.aluny.alunyapi.generated.Configuration;
 import fr.aluny.gameapi.IAlunyGame;
@@ -60,6 +59,7 @@ import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.xenondevs.invui.InvUI;
 
 public class GameImpl extends JavaPlugin implements IAlunyGame {
 
@@ -95,7 +95,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         CommandServiceImpl commandService = new CommandServiceImpl(new CommandManager(this), serviceManager);
         GamePlayerServiceImpl gamePlayerService = new GamePlayerServiceImpl(serviceManager);
         LootModifierServiceImpl lootModifierService = new LootModifierServiceImpl(serviceManager);
-        MessageServiceImpl messageService = new MessageServiceImpl(serviceManager);
+        MessageServiceImpl messageService = new MessageServiceImpl(this, serviceManager);
         ModerationServiceImpl moderationService = new ModerationServiceImpl(playerSanctionAPI, playerAPI, serviceManager);
         PlayerAccountServiceImpl playerService = new PlayerAccountServiceImpl(playerAPI, serviceManager);
         ProxyMessagingServiceImpl proxyMessagingService = new ProxyMessagingServiceImpl(this);
@@ -154,6 +154,12 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         logger.log(Level.INFO, "===============[ GAME ]===============");
         logger.log(Level.INFO, "          Game plugin enabled         ");
         logger.log(Level.INFO, "======================================");
+    }
+
+    @Override
+    public void onDisable() {
+        /* Services shutdown */
+        serviceManager.getAllServices().forEach(Service::shutdown);
     }
 
     @Override

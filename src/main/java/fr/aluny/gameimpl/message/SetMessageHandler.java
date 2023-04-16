@@ -1,16 +1,16 @@
 package fr.aluny.gameimpl.message;
 
-import fr.aluny.gameapi.message.ClickableMessageBuilder;
 import fr.aluny.gameapi.message.MessageHandler;
 import fr.aluny.gameapi.player.GamePlayerService;
 import fr.aluny.gameapi.player.OfflineGamePlayer;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -29,23 +29,18 @@ public class SetMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void sendMessage(String key, String... arguments) {
-        fetchReceivers().forEach(messageHandler -> messageHandler.sendMessage(key, arguments));
+    public void sendComponentMessage(String key, TagResolver... arguments) {
+        fetchReceivers().forEach(messageHandler -> messageHandler.sendComponentMessage(key, arguments));
     }
 
     @Override
-    public void sendTitle(String titleKey, String[] titleArgs, String messageKey, String[] messageArgs, int fadeIn, int duration, int fadeOut) {
+    public void sendTitle(String titleKey, List<TagResolver> titleArgs, String messageKey, List<TagResolver> messageArgs, int fadeIn, int duration, int fadeOut) {
         fetchReceivers().forEach(messageHandler -> messageHandler.sendTitle(titleKey, titleArgs, messageKey, messageArgs, fadeIn, duration, fadeOut));
     }
 
     @Override
-    public void sendActionBar(String titleKey, String... arguments) {
-        fetchReceivers().forEach(messageHandler -> messageHandler.sendActionBar(titleKey, arguments));
-    }
-
-    @Override
-    public void sendClickableMessage(Consumer<ClickableMessageBuilder> builder) {
-        fetchReceivers().forEach(messageHandler -> messageHandler.sendClickableMessage(builder));
+    public void sendActionBar(String key, TagResolver... arguments) {
+        fetchReceivers().forEach(messageHandler -> messageHandler.sendActionBar(key, arguments));
     }
 
     public static class BroadcastMessageHandler extends SetMessageHandler {

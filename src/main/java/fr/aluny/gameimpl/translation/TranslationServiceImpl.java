@@ -15,6 +15,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.xenondevs.inventoryaccess.component.i18n.Languages;
 
 public class TranslationServiceImpl implements TranslationService {
 
@@ -35,8 +36,11 @@ public class TranslationServiceImpl implements TranslationService {
         Map<String, String> translations = properties.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().toString(), entry -> ChatUtils.colorize(entry.getValue().toString())));
 
-        Locale locale = this.locales.getOrDefault(code, this.locales.put(code, new Locale(code, code.equals(DEFAULT_LOCALE_CODE), this)));
+        Locale locale = this.locales.getOrDefault(code, this.locales.put(code, new LocaleImpl(code, code.equals(DEFAULT_LOCALE_CODE), this)));
         locale.addTranslations(translations);
+
+        Languages.getInstance().setLanguageProvider(player -> "fr-fr"); //todo change
+        Languages.getInstance().addLanguage(code, translations);
 
         Bukkit.getLogger().info(String.format("Loaded %d translations from '%s' (%s) file of plugin %s.", translations.size(), file, code, plugin.getName()));
     }

@@ -4,6 +4,7 @@ import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
 import fr.aluny.gameapi.command.TabCompleter;
+import fr.aluny.gameapi.message.MessageService;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.translation.Locale;
@@ -12,6 +13,8 @@ import fr.aluny.gameimpl.api.PlayerSanctionAPI;
 import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.time.Duration;
 import java.util.List;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 
 @CommandInfo(name = "kick", permission = "fr.aluny.command.kick")
@@ -37,7 +40,7 @@ public class KickCommand extends Command {
             }
 
             playerSanctionAPI.applySanction(playerAccount, player, SanctionType.KICK, Duration.ZERO, String.join(" ", args)).ifPresent(sanction ->
-                    player.getMessageHandler().sendMessage("moderation_successfully_kicked", playerAccount.getName(), String.valueOf(sanction.getId())));
+                    player.getMessageHandler().sendComponentMessage("moderation_successfully_kicked", Placeholder.unparsed("name", playerAccount.getName()), Placeholder.unparsed("id", String.valueOf(sanction.getId()))));
             serviceManager.getProxyMessagingService().kickFromProxy(player.getPlayer(), playerAccount.getName(), getReasonString(playerAccount.getLocale()));
 
         }, () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", name));
@@ -49,7 +52,7 @@ public class KickCommand extends Command {
     }
 
     private String getReasonString(Locale locale) {
-        return locale.translate("moderation_kick_screen");
+        return LegacyComponentSerializer.legacySection().serialize(MessageService.COMPONENT_PARSER.deserialize(locale.translate("moderation_kick_screen")));
     }
 
 }

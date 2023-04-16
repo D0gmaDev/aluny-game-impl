@@ -1,18 +1,10 @@
 package fr.aluny.gameimpl.moderation.command;
 
-import de.studiocode.invui.gui.GUI;
-import de.studiocode.invui.gui.builder.GUIBuilder;
-import de.studiocode.invui.gui.builder.guitype.GUIType;
-import de.studiocode.invui.item.Item;
-import de.studiocode.invui.item.builder.ItemBuilder;
-import de.studiocode.invui.item.builder.SkullBuilder;
-import de.studiocode.invui.item.impl.AsyncItem;
-import de.studiocode.invui.item.impl.SimpleItem;
-import de.studiocode.invui.window.impl.single.SimpleWindow;
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
 import fr.aluny.gameapi.command.TabCompleter;
+import fr.aluny.gameapi.inventory.Translation;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.service.ServiceManager;
@@ -25,9 +17,18 @@ import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
-import net.md_5.bungee.api.ChatColor;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import xyz.xenondevs.invui.gui.PagedGui;
+import xyz.xenondevs.invui.item.Item;
+import xyz.xenondevs.invui.item.builder.ItemBuilder;
+import xyz.xenondevs.invui.item.builder.SkullBuilder;
+import xyz.xenondevs.invui.item.impl.AsyncItem;
+import xyz.xenondevs.invui.item.impl.SimpleItem;
+import xyz.xenondevs.invui.window.Window;
 
 @CommandInfo(name = "casier", permission = "fr.aluny.command.casier", asyncCall = true)
 public class CasierCommand extends Command {
@@ -55,29 +56,28 @@ public class CasierCommand extends Command {
 
         serviceManager.getPlayerAccountService().getPlayerAccountByName(name).ifPresentOrElse(playerAccount -> {
 
-            ChatColor color = ChatColor.of("#4e6654");
-
             Item headItem = new SimpleItem(new SkullBuilder(playerAccount.getName())
-                    .setDisplayName(playerAccount.getHighestRank().getPrefix() + playerAccount.getName())
-                    .addLoreLines(color + "1ère connexion: §7" + TimeUtils.formatDateToCET(playerAccount.getCreationDate())));
+                    .setDisplayName(new Translation("casier_target_name", Placeholder.component("name", LegacyComponentSerializer.legacySection().deserialize(playerAccount.getHighestRank().getPrefix() + playerAccount.getName()))))
+                    .addLoreLines(new Translation("casier_first_connection", Formatter.date("date", playerAccount.getCreationDate()))));
 
             List<DetailedPlayerSanction> playerDetailedSanctions = playerSanctionAPI.getPlayerDetailedSanctions(playerAccount, 30, 0);
 
             List<Item> items = playerDetailedSanctions.stream().sorted().map(sanction -> new AsyncItem(new ItemBuilder(Material.BOOK).setDisplayName("§7Chargement..."), () -> new ItemBuilder(getMaterial(sanction.getSanctionType()))
-                    .setDisplayName(ChatColor.of("#70cc89") + sanction.getSanctionType().name() + " §7(#" + sanction.getId() + ")")
+                    .setDisplayName(new Translation("casier_details_title", Placeholder.unparsed("type", sanction.getSanctionType().name()), Placeholder.unparsed("id", String.valueOf(sanction.getId()))))
                     .addLoreLines(
-                            color + "Raison: §7" + sanction.getDescription(),
-                            color + "Auteur: §7" + playerAPI.getPlayer(sanction.getAuthor()).map(PlayerAccount::getName).orElse("Erreur..."),
-                            color + "Date: §7" + TimeUtils.formatDateToCET(sanction.getStartAt()),
-                            color + "Durée: §7" + TimeUtils.format(Duration.between(sanction.getStartAt(), sanction.getEndAt())),
-                            " ",
-                            color + "Etat: §7" + (sanction.isCanceled() ? "§cAnnulé" : (sanction.isActive() ? "§aEn cours" : "§7Expiré"))
+                            new Translation("casier_reason", Placeholder.unparsed("reason", sanction.getDescription())),
+                            new Translation("casier_author", Placeholder.unparsed("author", playerAPI.getPlayer(sanction.getAuthor()).map(PlayerAccount::getName).orElse("Erreur..."))),
+                            new Translation("casier_date", Formatter.date("date", sanction.getStartAt())),
+                            new Translation("casier_duration", Placeholder.unparsed("duration", TimeUtils.format(Duration.between(sanction.getStartAt(), sanction.getEndAt())))))
+                    .addLoreLines(" ")
+                    .addLoreLines(new Translation("casier_state", Formatter.choice("state", sanction.isCanceled() ? 2 : (sanction.isActive() ? 0 : 1)))
                     ))).collect(Collectors.toList());
 
-            GUI gui = new GUIBuilder<>(GUIType.PAGED_ITEMS).setStructure(9, 5, CASIER_STRUCTURE).addIngredient('h', headItem).setItems(items).build();
 
-            SimpleWindow simpleWindow = new SimpleWindow(player.getPlayer(), color + "Casier de " + playerAccount.getName(), gui);
-            serviceManager.getRunnableHelper().runSynchronously(simpleWindow::show);
+            PagedGui<Item> gui = PagedGui.items().setStructure(9, 5, CASIER_STRUCTURE).addIngredient('h', headItem).setContent(items).build();
+
+            Window window = Window.single().setGui(gui).setTitle(new Translation("casier_inventory_title", Placeholder.unparsed("name", playerAccount.getName()))).build(player.getPlayer());
+            serviceManager.getRunnableHelper().runSynchronously(window::open);
 
         }, () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", name));
 

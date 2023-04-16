@@ -8,14 +8,22 @@ import fr.aluny.gameimpl.message.SetMessageHandler.BroadcastMessageHandler;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Supplier;
+import net.kyori.adventure.platform.bukkit.BukkitAudiences;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.plugin.java.JavaPlugin;
+import xyz.xenondevs.inventoryaccess.component.i18n.AdventureComponentLocalizer;
 
 public class MessageServiceImpl implements MessageService {
 
+    private static BukkitAudiences audiences;
+
     private BroadcastMessageHandler broadcastMessageHandler;
 
+    private final JavaPlugin     plugin;
     private final ServiceManager serviceManager;
 
-    public MessageServiceImpl(ServiceManager serviceManager) {
+    public MessageServiceImpl(JavaPlugin plugin, ServiceManager serviceManager) {
+        this.plugin = plugin;
         this.serviceManager = serviceManager;
     }
 
@@ -35,5 +43,25 @@ public class MessageServiceImpl implements MessageService {
             return broadcastMessageHandler;
 
         return broadcastMessageHandler = new BroadcastMessageHandler(serviceManager.getGamePlayerService());
+    }
+
+    @Override
+    public void initialize() {
+        audiences = BukkitAudiences.create(plugin);
+        AdventureComponentLocalizer.getInstance().setComponentCreator(COMPONENT_PARSER::deserialize);
+    }
+
+    @Override
+    public void shutdown() {
+        if (audiences != null)
+            audiences.close();
+    }
+
+    static BukkitAudiences getAudiences() {
+        return audiences;
+    }
+
+    static MiniMessage getComponentParser() {
+        return COMPONENT_PARSER;
     }
 }
