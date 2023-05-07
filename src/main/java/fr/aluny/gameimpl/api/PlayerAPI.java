@@ -32,7 +32,7 @@ public class PlayerAPI {
         try {
 
             PlayerDTO player = apiInstance.getPlayer(uuid);
-            return Optional.of(new PlayerAccountImpl(player.getUuid(), player.getUsername(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt()));
+            return Optional.of(new PlayerAccountImpl(player.getUuid(), player.getUsername(), player.getCurrentServerId(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt()));
 
         } catch (ApiException e) {
             System.err.println("Exception when calling PlayerControllerApi#getPlayer");
@@ -51,7 +51,7 @@ public class PlayerAPI {
         try {
 
             return apiInstance.searchPlayers(name).stream()
-                    .map(player -> new PlayerAccountImpl(player.getUuid(), player.getUsername(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt()))
+                    .map(player -> new PlayerAccountImpl(player.getUuid(), player.getUsername(), player.getCurrentServerId(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt()))
                     .collect(Collectors.toList());
 
         } catch (ApiException e) {
@@ -76,9 +76,9 @@ public class PlayerAPI {
 
             PlayerDetailsDTO player = apiInstance.getPlayerDetails(uuid);
 
-            List<PlayerSanction> sanctions = player.getCurrentSanctions().stream().map(PlayerSanctionAPI::buildSanction).toList();
+            List<PlayerSanction> sanctions = player.getCurrentSanctions() == null ? List.of() : player.getCurrentSanctions().stream().map(PlayerSanctionAPI::buildSanction).toList();
 
-            return Optional.of(new DetailedPlayerAccount(player.getUuid(), player.getUsername(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt(), sanctions));
+            return Optional.of(new DetailedPlayerAccount(player.getUuid(), player.getUsername(), player.getCurrentServerId(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt(), sanctions));
 
         } catch (ApiException e) {
             System.err.println("Exception when calling PlayerControllerApi#getPlayerDetails");

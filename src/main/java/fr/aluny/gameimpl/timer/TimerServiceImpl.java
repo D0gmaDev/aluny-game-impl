@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 
 public class TimerServiceImpl implements TimerService {
 
@@ -35,7 +35,7 @@ public class TimerServiceImpl implements TimerService {
     }
 
     @Override
-    public Timer registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Consumer<Long> runOnTick, Consumer<Long> runOnEnd) {
+    public Timer registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
         TimerImpl timer = new TimerImpl(delay, step, stop, timeUnit, runOnTick, runOnEnd);
 
         TIMERS.put(key, timer);
@@ -43,7 +43,7 @@ public class TimerServiceImpl implements TimerService {
     }
 
     @Override
-    public Timer createTimerFromTimeValue(String key, TimeValue step, TimeValue end, Consumer<Long> runOnTick, Consumer<Long> runOnEnd) {
+    public Timer createTimerFromTimeValue(String key, TimeValue step, TimeValue end, LongConsumer runOnTick, LongConsumer runOnEnd) {
         long endDelay = end == null ? Long.MAX_VALUE : end.getValue();
 
         if (end != null)

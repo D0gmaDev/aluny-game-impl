@@ -12,8 +12,8 @@ public class DetailedPlayerAccount extends PlayerAccountImpl {
 
     private final List<PlayerSanction> currentSanctions;
 
-    public DetailedPlayerAccount(UUID uuid, String name, Locale locale, Set<Rank> ranks, OffsetDateTime creationDate, List<PlayerSanction> currentSanctions) {
-        super(uuid, name, locale, ranks, creationDate);
+    public DetailedPlayerAccount(UUID uuid, String name, Integer currentServerId, Locale locale, Set<Rank> ranks, OffsetDateTime creationDate, List<PlayerSanction> currentSanctions) {
+        super(uuid, name, currentServerId, locale, ranks, creationDate);
         this.currentSanctions = currentSanctions;
     }
 
@@ -26,6 +26,7 @@ public class DetailedPlayerAccount extends PlayerAccountImpl {
         return "DetailedPlayerAccount{" +
                 "uuid=" + getUuid() +
                 ", name='" + getName() + '\'' +
+                ", currentServerId=" + getCurrentServerId().map(Object::toString).orElse("null") +
                 ", locale=" + getLocale() +
                 ", ranks=" + getRanks() +
                 ", creationDate=" + getCreationDate() +

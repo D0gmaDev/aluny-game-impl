@@ -34,21 +34,17 @@ public class SchematicImpl implements Schematic {
 
     @Override
     public void paste(Location location) {
-        this.paste(location, block -> {
-        }, true, entity -> {
-        });
+        paste(location, null, true, null);
     }
 
     @Override
     public void paste(Location location, Consumer<Block> blockConsumer) {
-        this.paste(location, blockConsumer, true, entity -> {
-        });
+        paste(location, blockConsumer, true, null);
     }
 
     @Override
     public void paste(Location location, Consumer<Block> blockConsumer, boolean withEntities) {
-        this.paste(location, blockConsumer, withEntities, entity -> {
-        });
+        paste(location, blockConsumer, withEntities, null);
     }
 
     @Override

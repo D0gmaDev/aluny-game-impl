@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.core.publisher.Sinks.EmitFailureHandler;
@@ -28,28 +28,33 @@ public class TimerImpl implements Timer {
         SECONDS_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
-    private final Timer instance;
-
     private final Long     delay;
     private final Long     step;
     private final TimeUnit timeUnit;
-    private final Runnable runOnEnd;
-    private final Runnable runOnTick;
 
     private Long stop;
+
+    private final LongConsumer runOnTick;
+    private final LongConsumer runOnEnd;
 
     private final Many<Timer>    timerMany;
     private final Scheduler      scheduler;
     private final List<Runnable> endTasks = new ArrayList<>();
 
-    private Long            value = 0L;
+    private long            value = 0L;
     private java.util.Timer timer;
     private boolean         ended = false;
 
     public TimerImpl(Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
-        this.instance = this;
+        this(delay, step, stop, timeUnit, l -> runOnTick.run(), l -> runOnEnd.run());
+    }
 
-        this.delay = delay;
+    public TimerImpl(Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
+
+        if (step == null || step <= 0L)
+            throw new IllegalArgumentException("step must be a positive long.");
+
+        this.delay = delay == null ? 0L : delay;
         this.step = step;
         this.stop = stop;
         this.timeUnit = timeUnit;
@@ -60,36 +65,28 @@ public class TimerImpl implements Timer {
         scheduler = Schedulers.boundedElastic();
     }
 
-    public TimerImpl(Long delay, Long step, Long stop, TimeUnit timeUnit, Consumer<Long> runOnTick, Consumer<Long> runOnEnd) {
-        this.instance = this;
-
-        this.delay = delay;
-        this.step = step;
-        this.stop = stop;
-        this.timeUnit = timeUnit;
-        this.runOnTick = () -> runOnTick.accept(value);
-        this.runOnEnd = () -> runOnEnd.accept(value);
-
-        this.timerMany = Sinks.many().replay().limit(Duration.ofSeconds(1));
-        scheduler = Schedulers.boundedElastic();
-    }
-
     @Override
     public void start() {
+        if (timer != null)
+            throw new IllegalStateException("the timer is already running.");
+
+        Timer instance = this;
+
         this.timer = new java.util.Timer();
         this.timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                value++;
 
-                runOnTick.run();
+                runOnTick.accept(++value);
+
                 timerMany.emitNext(instance, EmitFailureHandler.FAIL_FAST);
 
-                if (stop != null && value == TimeUnit.SECONDS.convert(stop, timeUnit)) {
+                if (stop != null && value >= stop / step) {
                     ended = true;
                     timer.cancel();
-                    runOnEnd.run();
+                    runOnEnd.accept(value);
                     endTasks.forEach(Runnable::run);
+                    timer = null;
                 }
             }
         }, TimeUnit.MILLISECONDS.convert(this.delay, this.timeUnit), TimeUnit.MILLISECONDS.convert(this.step, this.timeUnit));
@@ -97,6 +94,9 @@ public class TimerImpl implements Timer {
 
     @Override
     public void stop() {
+        if (timer == null)
+            throw new IllegalStateException("the timer is not running.");
+
         this.timer.cancel();
     }
 

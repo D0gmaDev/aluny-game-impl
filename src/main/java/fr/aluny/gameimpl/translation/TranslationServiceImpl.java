@@ -6,7 +6,6 @@ import fr.aluny.gameapi.translation.TranslationService;
 import fr.aluny.gameapi.utils.ChatUtils;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class TranslationServiceImpl implements TranslationService {
 
     @Override
     public List<Locale> getAllLocales() {
-        return new ArrayList<>(this.locales.values());
+        return List.copyOf(this.locales.values());
     }
 
     @Override

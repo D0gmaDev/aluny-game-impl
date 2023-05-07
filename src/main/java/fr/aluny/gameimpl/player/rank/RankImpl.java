@@ -10,14 +10,18 @@ public final class RankImpl implements Rank {
     private final String      name;
     private final int         importanceIndex;
     private final String      prefix;
+    private final String      colorCode;
     private final Set<String> permissions;
+    private final boolean     superUser;
 
-    public RankImpl(int id, String name, int importanceIndex, String prefix, Set<String> permissions) {
+    public RankImpl(int id, String name, int importanceIndex, String prefix, String colorCode, Set<String> permissions) {
         this.id = id;
         this.name = name;
         this.importanceIndex = importanceIndex;
         this.prefix = prefix;
+        this.colorCode = colorCode;
         this.permissions = permissions;
+        this.superUser = permissions.contains("*");
     }
 
     @Override
@@ -41,13 +45,18 @@ public final class RankImpl implements Rank {
     }
 
     @Override
+    public String getColorCode() {
+        return this.colorCode;
+    }
+
+    @Override
     public Set<String> getPermissions() {
         return Collections.unmodifiableSet(this.permissions);
     }
 
     @Override
     public boolean hasPermission(String permission) {
-        return this.permissions.contains(permission) || permission.contains("*");
+        return this.superUser || this.permissions.contains(permission);
     }
 
     @Override
@@ -61,9 +70,8 @@ public final class RankImpl implements Rank {
             return true;
         if (obj == null || obj.getClass() != this.getClass())
             return false;
-        var that = (RankImpl) obj;
 
-        return this.id == that.id;
+        return this.id == ((RankImpl) obj).id;
     }
 
 }

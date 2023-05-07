@@ -44,7 +44,8 @@ public class RankServiceImpl implements RankService {
     @Override
     public void initialize() {
         for (Rank rank : rankAPI.loadAllRanks()) {
-            ScoreboardTeam scoreboardTeam = serviceManager.getScoreboardTeamService().registerScoreboardTeam(rank.getName(), rank.getPrefix());
+            char importancePrefix = (char) ('z' - rank.getImportanceIndex()); // To sort correctly the teams in the tab list (it sorts alphabetically by the name of the team)
+            ScoreboardTeam scoreboardTeam = serviceManager.getScoreboardTeamService().registerScoreboardTeam(importancePrefix + rank.getName(), rank.getPrefix());
             this.ranks.put(rank, scoreboardTeam);
             this.ranksById.put(rank.getId(), rank);
         }
@@ -57,7 +58,7 @@ public class RankServiceImpl implements RankService {
         PermissionAttachment permissionAttachment = gamePlayer.getPlayer().addAttachment(this.plugin);
         serviceManager.getRunnableHelper().runAsynchronously(() -> {
             playerAccount.getRanks().forEach(rank -> rank.getPermissions().forEach(permission -> permissionAttachment.setPermission(permission, true)));
-            gamePlayer.getPlayer().updateCommands();
+            serviceManager.getRunnableHelper().runSynchronously(gamePlayer.getPlayer()::updateCommands);
         });
     }
 }
