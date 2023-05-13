@@ -4,7 +4,7 @@ import fr.aluny.gameapi.message.MessageHandler;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.player.rank.Rank;
-import fr.aluny.gameapi.scoreboard.PlayerScoreboard;
+import fr.aluny.gameapi.scoreboard.Scoreboard;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
 import fr.aluny.gameimpl.message.PlayerMessageHandler;
 import java.time.Instant;
@@ -21,11 +21,11 @@ import org.bukkit.potion.PotionEffectType;
 
 public class GamePlayerImpl implements GamePlayer {
 
-    private final Player           player;
-    private final MessageHandler   messageHandler;
-    private       ScoreboardTeam   scoreboardTeam;
-    private       PlayerScoreboard scoreboard;
-    private       boolean          vanished;
+    private final Player         player;
+    private final MessageHandler messageHandler;
+    private       ScoreboardTeam scoreboardTeam;
+    private       Scoreboard     scoreboard;
+    private       boolean        vanished;
 
     private final Rank cachedHighestRank;
 
@@ -56,12 +56,12 @@ public class GamePlayerImpl implements GamePlayer {
     }
 
     @Override
-    public Optional<PlayerScoreboard> getScoreboard() {
+    public Optional<Scoreboard> getScoreboard() {
         return Optional.ofNullable(this.scoreboard);
     }
 
     @Override
-    public void setScoreboard(PlayerScoreboard scoreboard) {
+    public void setScoreboard(Scoreboard scoreboard) {
         this.scoreboard = scoreboard;
     }
 

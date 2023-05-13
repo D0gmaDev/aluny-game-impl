@@ -101,7 +101,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         ProxyMessagingServiceImpl proxyMessagingService = new ProxyMessagingServiceImpl(this);
         RankServiceImpl rankService = new RankServiceImpl(this, rankAPI, serviceManager, serverSettings);
         SchematicServiceImpl schematicService = new SchematicServiceImpl();
-        ScoreboardServiceImpl scoreboardService = new ScoreboardServiceImpl(serviceManager);
+        ScoreboardServiceImpl scoreboardService = new ScoreboardServiceImpl(this, serviceManager);
         ScoreboardTeamServiceImpl scoreboardTeamService = new ScoreboardTeamServiceImpl();
         TimerServiceImpl timerService = new TimerServiceImpl();
         TranslationServiceImpl translationService = new TranslationServiceImpl();

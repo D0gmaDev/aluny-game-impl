@@ -46,7 +46,7 @@ public class TimerImpl implements Timer {
     private boolean         ended = false;
 
     public TimerImpl(Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
-        this(delay, step, stop, timeUnit, l -> runOnTick.run(), l -> runOnEnd.run());
+        this(delay, step, stop, timeUnit, (runOnTick != null) ? l -> runOnTick.run() : null, (runOnEnd != null) ? l -> runOnEnd.run() : null);
     }
 
     public TimerImpl(Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
@@ -77,14 +77,18 @@ public class TimerImpl implements Timer {
             @Override
             public void run() {
 
-                runOnTick.accept(++value);
+                value++;
+
+                if (runOnTick != null)
+                    runOnTick.accept(value);
 
                 timerMany.emitNext(instance, EmitFailureHandler.FAIL_FAST);
 
                 if (stop != null && value >= stop / step) {
                     ended = true;
                     timer.cancel();
-                    runOnEnd.accept(value);
+                    if (runOnEnd != null)
+                        runOnEnd.accept(value);
                     endTasks.forEach(Runnable::run);
                     timer = null;
                 }

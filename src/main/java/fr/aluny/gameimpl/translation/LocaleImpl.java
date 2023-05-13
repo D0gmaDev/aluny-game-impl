@@ -91,6 +91,10 @@ public class LocaleImpl implements Locale {
         return defaultLocale;
     }
 
+    public Map<String, String> getTranslations() {
+        return translations;
+    }
+
     @Override
     public String toString() {
         return "LocaleImpl{" +
