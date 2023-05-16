@@ -6,6 +6,8 @@ import fr.aluny.gameapi.translation.TranslationService;
 import fr.aluny.gameapi.utils.ChatUtils;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +28,10 @@ public class TranslationServiceImpl implements TranslationService {
     public void loadTranslations(JavaPlugin plugin, String code, String file) {
         Properties properties = new Properties();
         try (InputStream langStream = plugin.getClass().getClassLoader().getResourceAsStream(file)) {
-            properties.load(langStream);
+            if (langStream == null)
+                throw new IOException("lang stream is null");
+
+            properties.load(new InputStreamReader(langStream, StandardCharsets.UTF_8));
 
         } catch (IOException e) {
             throw new RuntimeException(e);
