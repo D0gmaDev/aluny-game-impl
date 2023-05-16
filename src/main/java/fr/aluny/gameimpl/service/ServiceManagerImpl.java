@@ -11,7 +11,6 @@ import fr.aluny.gameapi.player.rank.RankService;
 import fr.aluny.gameapi.proxy.ProxyMessagingService;
 import fr.aluny.gameapi.scoreboard.ScoreboardService;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeamService;
-import fr.aluny.gameapi.service.NoServiceException;
 import fr.aluny.gameapi.service.Service;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.timer.RunnableHelper;
@@ -22,121 +21,210 @@ import fr.aluny.gameapi.world.LootModifierService;
 import fr.aluny.gameapi.world.SchematicService;
 import fr.aluny.gameapi.world.anchor.AnchorService;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 import org.bukkit.Bukkit;
 
 public class ServiceManagerImpl implements ServiceManager {
 
-    private static final Logger LOGGER = Bukkit.getLogger();
+    private AnchorService         anchorService;
+    private ChatService           chatService;
+    private CommandService        commandService;
+    private GamePlayerService     gamePlayerService;
+    private LootModifierService   lootModifierService;
+    private MessageService        messageService;
+    private ModerationService     moderationService;
+    private PlayerAccountService  playerAccountService;
+    private ProxyMessagingService proxyMessagingService;
+    private RankService           rankService;
+    private SchematicService      schematicService;
+    private ScoreboardService     scoreboardService;
+    private ScoreboardTeamService scoreboardTeamService;
+    private TimerService          timerService;
+    private TranslationService    translationService;
+    private ValueService          valueService;
+    private VanishService         vanishService;
+    private RunnableHelper        runnableHelper;
 
-    private final Map<Class<? extends Service>, Service> serviceMap = new HashMap<>();
-
-    public <T extends Service> void registerService(Class<T> facadeService, T service) {
-        serviceMap.put(facadeService, service);
-        LOGGER.log(Level.INFO, "Service " + facadeService.getName() + " registered.");
+    public void initializeServices() {
+        Collection<Service> services = getAllServices();
+        services.forEach(Service::initialize);
+        Bukkit.getLogger().info("[SERVICE] Successfully initialized " + services.size() + " services.");
     }
 
-    private <T extends Service> T getService(Class<T> serviceClass) {
-        return Optional.ofNullable(serviceMap.get(serviceClass)).map(serviceClass::cast).orElseThrow(() -> new NoServiceException(serviceClass.getName()));
+    public void shutdownServices() {
+        Collection<Service> services = getAllServices();
+        services.forEach(Service::shutdown);
+        Bukkit.getLogger().info("[SERVICE] Successfully shut down " + services.size() + " services.");
     }
 
-    public Collection<Service> getAllServices() {
-        return serviceMap.values();
+    private Collection<Service> getAllServices() {
+        return List.of(
+                anchorService, chatService, commandService, gamePlayerService, lootModifierService,
+                messageService, moderationService, playerAccountService, proxyMessagingService, rankService,
+                schematicService, scoreboardService, scoreboardTeamService, timerService, translationService,
+                valueService, vanishService, runnableHelper
+        );
     }
-
-    /* SERVICES */
 
     @Override
     public AnchorService getAnchorService() {
-        return getService(AnchorService.class);
+        return anchorService;
+    }
+
+    public void setAnchorService(AnchorService anchorService) {
+        this.anchorService = anchorService;
     }
 
     @Override
     public ChatService getChatService() {
-        return getService(ChatService.class);
+        return chatService;
+    }
+
+    public void setChatService(ChatService chatService) {
+        this.chatService = chatService;
     }
 
     @Override
     public CommandService getCommandService() {
-        return getService(CommandService.class);
+        return commandService;
+    }
+
+    public void setCommandService(CommandService commandService) {
+        this.commandService = commandService;
     }
 
     @Override
     public GamePlayerService getGamePlayerService() {
-        return getService(GamePlayerService.class);
+        return gamePlayerService;
+    }
+
+    public void setGamePlayerService(GamePlayerService gamePlayerService) {
+        this.gamePlayerService = gamePlayerService;
     }
 
     @Override
     public LootModifierService getLootModifierService() {
-        return getService(LootModifierService.class);
+        return lootModifierService;
+    }
+
+    public void setLootModifierService(LootModifierService lootModifierService) {
+        this.lootModifierService = lootModifierService;
     }
 
     @Override
     public MessageService getMessageService() {
-        return getService(MessageService.class);
+        return messageService;
+    }
+
+    public void setMessageService(MessageService messageService) {
+        this.messageService = messageService;
     }
 
     @Override
     public ModerationService getModerationService() {
-        return getService(ModerationService.class);
+        return moderationService;
+    }
+
+    public void setModerationService(ModerationService moderationService) {
+        this.moderationService = moderationService;
     }
 
     @Override
     public PlayerAccountService getPlayerAccountService() {
-        return getService(PlayerAccountService.class);
+        return playerAccountService;
+    }
+
+    public void setPlayerAccountService(PlayerAccountService playerAccountService) {
+        this.playerAccountService = playerAccountService;
     }
 
     @Override
     public ProxyMessagingService getProxyMessagingService() {
-        return getService(ProxyMessagingService.class);
+        return proxyMessagingService;
+    }
+
+    public void setProxyMessagingService(ProxyMessagingService proxyMessagingService) {
+        this.proxyMessagingService = proxyMessagingService;
     }
 
     @Override
     public RankService getRankService() {
-        return getService(RankService.class);
+        return rankService;
+    }
+
+    public void setRankService(RankService rankService) {
+        this.rankService = rankService;
     }
 
     @Override
     public SchematicService getSchematicService() {
-        return getService(SchematicService.class);
+        return schematicService;
+    }
+
+    public void setSchematicService(SchematicService schematicService) {
+        this.schematicService = schematicService;
     }
 
     @Override
     public ScoreboardService getScoreboardService() {
-        return getService(ScoreboardService.class);
+        return scoreboardService;
+    }
+
+    public void setScoreboardService(ScoreboardService scoreboardService) {
+        this.scoreboardService = scoreboardService;
     }
 
     @Override
     public ScoreboardTeamService getScoreboardTeamService() {
-        return getService(ScoreboardTeamService.class);
+        return scoreboardTeamService;
+    }
+
+    public void setScoreboardTeamService(ScoreboardTeamService scoreboardTeamService) {
+        this.scoreboardTeamService = scoreboardTeamService;
     }
 
     @Override
     public TimerService getTimerService() {
-        return getService(TimerService.class);
+        return timerService;
+    }
+
+    public void setTimerService(TimerService timerService) {
+        this.timerService = timerService;
     }
 
     @Override
     public TranslationService getTranslationService() {
-        return getService(TranslationService.class);
+        return translationService;
+    }
+
+    public void setTranslationService(TranslationService translationService) {
+        this.translationService = translationService;
     }
 
     @Override
     public ValueService getValueService() {
-        return getService(ValueService.class);
+        return valueService;
+    }
+
+    public void setValueService(ValueService valueService) {
+        this.valueService = valueService;
     }
 
     @Override
     public VanishService getVanishService() {
-        return getService(VanishService.class);
+        return vanishService;
+    }
+
+    public void setVanishService(VanishService vanishService) {
+        this.vanishService = vanishService;
     }
 
     @Override
     public RunnableHelper getRunnableHelper() {
-        return getService(RunnableHelper.class);
+        return runnableHelper;
+    }
+
+    public void setRunnableHelper(RunnableHelper runnableHelper) {
+        this.runnableHelper = runnableHelper;
     }
 }
