@@ -5,7 +5,8 @@ import fr.aluny.gameapi.chat.ProcessedChat;
 import fr.aluny.gameapi.player.PlayerAccountService;
 import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameimpl.player.GamePlayerImpl;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 
 public class ChatColorPreProcessor implements ChatPreProcessor {
 
@@ -19,7 +20,7 @@ public class ChatColorPreProcessor implements ChatPreProcessor {
     public void accept(ProcessedChat processedChat) {
         Rank highestRank = processedChat.getSender() instanceof GamePlayerImpl gamePlayer ? gamePlayer.getCachedHighestRank() : accountService.getPlayerAccount(processedChat.getSender()).getHighestRank();
 
-        if (!highestRank.hasPermission("fr.aluny.chat.white_message"))
-            processedChat.setMessageContent(ChatColor.GRAY + processedChat.getMessageContent());
+        TextColor color = highestRank.hasPermission("fr.aluny.chat.white_message") ? NamedTextColor.WHITE : NamedTextColor.GRAY;
+        processedChat.changeMessageContent(content -> content.color(color));
     }
 }
