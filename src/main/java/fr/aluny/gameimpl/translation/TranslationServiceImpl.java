@@ -20,7 +20,7 @@ public class TranslationServiceImpl implements TranslationService {
 
     private static final String DEFAULT_LOCALE_CODE = "fr-fr";
 
-    private final Map<String, Locale> locales = new HashMap<>();
+    private final Map<String, LocaleImpl> locales = new HashMap<>();
 
     @Override
     public void loadTranslations(JavaPlugin plugin, String code, String file) {
@@ -35,11 +35,17 @@ public class TranslationServiceImpl implements TranslationService {
         Map<String, String> translations = properties.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().toString(), entry -> ChatUtils.colorize(entry.getValue().toString())));
 
-        Locale locale = this.locales.getOrDefault(code, this.locales.put(code, new LocaleImpl(code, code.equals(DEFAULT_LOCALE_CODE), this)));
+        LocaleImpl locale = this.locales.get(code);
+
+        if (locale == null) {
+            locale = new LocaleImpl(code, code.equals(DEFAULT_LOCALE_CODE), this);
+            this.locales.put(code, locale);
+        }
+
         locale.addTranslations(translations);
 
         Languages.getInstance().setLanguageProvider(player -> "fr-fr"); //todo change
-        Languages.getInstance().addLanguage(code, translations);
+        Languages.getInstance().addLanguage(code, locale.getTranslations());
 
         Bukkit.getLogger().info(String.format("Loaded %d translations from '%s' (%s) file of plugin %s.", translations.size(), file, code, plugin.getName()));
     }
