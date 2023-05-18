@@ -22,13 +22,10 @@ public class TimerServiceImpl implements TimerService {
     }
 
     @Override
-    public TimerImpl createTimerFromTimeValue(String key, TimeValue step, TimeValue end, Runnable runOnTick, Runnable runOnEnd) {
-        long endDelay = end == null ? Long.MAX_VALUE : end.getValue();
+    public TimerImpl registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, Runnable runOnTick, Runnable runOnEnd) {
+        Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
 
-        if (end != null)
-            endDelay = step.getTimeUnit().convert(endDelay, end.getTimeUnit());
-
-        TimerImpl timer = new TimerImpl(step.getValue(), step.getValue(), endDelay, step.getTimeUnit(), runOnTick, runOnEnd);
+        TimerImpl timer = new TimerImpl(step.getValue(), step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
 
         TIMERS.put(key, timer);
         return timer;
@@ -43,13 +40,10 @@ public class TimerServiceImpl implements TimerService {
     }
 
     @Override
-    public Timer createTimerFromTimeValue(String key, TimeValue step, TimeValue end, LongConsumer runOnTick, LongConsumer runOnEnd) {
-        long endDelay = end == null ? Long.MAX_VALUE : end.getValue();
+    public Timer registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, LongConsumer runOnTick, LongConsumer runOnEnd) {
+        Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
 
-        if (end != null)
-            endDelay = step.getTimeUnit().convert(endDelay, end.getTimeUnit());
-
-        TimerImpl timer = new TimerImpl(step.getValue(), step.getValue(), endDelay, step.getTimeUnit(), runOnTick, runOnEnd);
+        TimerImpl timer = new TimerImpl(step.getValue(), step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
 
         TIMERS.put(key, timer);
         return timer;

@@ -13,38 +13,45 @@ public class TimeValueImpl extends NumericValueImpl<Long> implements TimeValue {
     private static final SimpleDateFormat SECOND_2_DATE_FORMAT = new SimpleDateFormat("s's'");
 
     static {
-        HOUR_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-        MINUTE_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-        SECOND_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-        SECOND_2_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
+        TimeZone timeZone = TimeZone.getTimeZone("GMT");
+
+        HOUR_DATE_FORMAT.setTimeZone(timeZone);
+        MINUTE_DATE_FORMAT.setTimeZone(timeZone);
+        SECOND_DATE_FORMAT.setTimeZone(timeZone);
+        SECOND_2_DATE_FORMAT.setTimeZone(timeZone);
     }
 
     private final TimeUnit timeUnit;
 
-    public TimeValueImpl(String nameKey, String descriptionKey, Long defaultValue, Long minValue, Long maxValue, Long smallStep, Long mediumStem, Long largeStep, TimeUnit timeUnit) {
+    public TimeValueImpl(String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
         super(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep);
 
         this.timeUnit = timeUnit;
     }
 
     @Override
+    public long getLongValue() {
+        return getValue();
+    }
+
+    @Override
     public String getFormattedTime() {
-        return getDateFormat(this.getValue()).format(TimeUnit.MILLISECONDS.convert(this.getValue(), this.timeUnit));
+        return getDateFormat(getValue()).format(TimeUnit.MILLISECONDS.convert(getValue(), this.timeUnit));
     }
 
     @Override
     public String getFormattedSmallStep() {
-        return getDateFormat(this.getSmallStep()).format(TimeUnit.MILLISECONDS.convert(this.getSmallStep(), this.timeUnit));
+        return getDateFormat(getSmallStep()).format(TimeUnit.MILLISECONDS.convert(getSmallStep(), this.timeUnit));
     }
 
     @Override
     public String getFormattedMediumStep() {
-        return getDateFormat(this.getMediumStep()).format(TimeUnit.MILLISECONDS.convert(this.getMediumStep(), this.timeUnit));
+        return getDateFormat(getMediumStep()).format(TimeUnit.MILLISECONDS.convert(getMediumStep(), this.timeUnit));
     }
 
     @Override
     public String getFormattedLargeStep() {
-        return getDateFormat(this.getLargeStep()).format(TimeUnit.MILLISECONDS.convert(this.getLargeStep(), this.timeUnit));
+        return getDateFormat(this.getLargeStep()).format(TimeUnit.MILLISECONDS.convert(getLargeStep(), this.timeUnit));
     }
 
     private SimpleDateFormat getDateFormat(long value) {

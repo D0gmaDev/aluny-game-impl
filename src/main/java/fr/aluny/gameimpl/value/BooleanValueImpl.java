@@ -7,18 +7,19 @@ import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
 public class BooleanValueImpl extends Value<Boolean> implements BooleanValue {
 
     private final String  nameKey;
-    private final String  yesDescriptionKey;
-    private final String  noDescriptionKey;
+    private final String  trueDescriptionKey;
+    private final String  falseDescriptionKey;
     private final boolean defaultValue;
 
     private boolean value;
 
-    public BooleanValueImpl(String nameKey, String yesDescriptionKey, String noDescriptionKey, boolean value) {
+    public BooleanValueImpl(String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
         this.nameKey = nameKey;
-        this.yesDescriptionKey = yesDescriptionKey;
-        this.noDescriptionKey = noDescriptionKey;
-        this.value = value;
-        this.defaultValue = this.value;
+        this.trueDescriptionKey = trueDescriptionKey;
+        this.falseDescriptionKey = falseDescriptionKey;
+
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
     }
 
     @Override
@@ -50,7 +51,7 @@ public class BooleanValueImpl extends Value<Boolean> implements BooleanValue {
 
     @Override
     public String getDescriptionKey() {
-        return getValue() ? this.yesDescriptionKey : this.noDescriptionKey;
+        return getBooleanValue() ? this.trueDescriptionKey : this.falseDescriptionKey;
     }
 
     @Override
@@ -60,7 +61,7 @@ public class BooleanValueImpl extends Value<Boolean> implements BooleanValue {
 
     @Override
     public void toggle() {
-        setValue(!getValue());
+        setValue(!getBooleanValue());
     }
 
     @Override
