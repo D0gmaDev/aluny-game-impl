@@ -49,6 +49,11 @@ public class PlayerAccountImpl implements PlayerAccount {
     }
 
     @Override
+    public boolean isOnline() {
+        return getCurrentServerId().isPresent();
+    }
+
+    @Override
     public Locale getLocale() {
         return this.locale;
     }

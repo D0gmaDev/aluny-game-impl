@@ -74,4 +74,13 @@ public final class RankImpl implements Rank {
         return this.id == ((RankImpl) obj).id;
     }
 
+    @Override
+    public String toString() {
+        return "RankImpl{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", importanceIndex=" + importanceIndex +
+                ", superUser=" + superUser +
+                '}';
+    }
 }
