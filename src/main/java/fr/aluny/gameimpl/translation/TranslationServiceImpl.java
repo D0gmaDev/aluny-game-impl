@@ -29,7 +29,7 @@ public class TranslationServiceImpl implements TranslationService {
         Properties properties = new Properties();
         try (InputStream langStream = plugin.getClass().getClassLoader().getResourceAsStream(file)) {
             if (langStream == null)
-                throw new IOException("lang stream is null");
+                throw new IOException("Language translation file stream is null");
 
             properties.load(new InputStreamReader(langStream, StandardCharsets.UTF_8));
 
