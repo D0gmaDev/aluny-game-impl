@@ -4,18 +4,28 @@ import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
 import fr.aluny.gameapi.command.TabCompleter;
+import fr.aluny.gameapi.message.MessageService;
 import fr.aluny.gameapi.player.GamePlayer;
+import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.service.ServiceManager;
+import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameapi.utils.GameUtils;
+import fr.aluny.gameimpl.message.MessageServiceImpl;
+import fr.aluny.gameimpl.player.DetailedPlayerAccount;
+import fr.aluny.gameimpl.player.PlayerAccountServiceImpl;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
 @CommandInfo(name = "msg", asyncCall = true)
 public class PrivateMessageCommand extends Command {
 
     private static final String BYPASS_PERMISSION = "fr.aluny.bypass_private_message";
-
-    private static final String PRIVATE_MESSAGE_FORMAT = "<sender_prefix><sender_name> <dark_gray>» <receiver_prefix><receiver_name> <dark_gray>: <#9bcc91><message>";
 
     private final ServiceManager serviceManager;
 
@@ -26,9 +36,6 @@ public class PrivateMessageCommand extends Command {
     @Default
     public void defaultContext(GamePlayer player, String receiverName, String[] words) {
 
-        //TODO uncomment when game-impl pull #3 is merged
-
-        /*
         if (words.length == 0) {
             player.getMessageHandler().sendMessage("private_message_empty");
             return;
@@ -72,18 +79,12 @@ public class PrivateMessageCommand extends Command {
 
         String message = String.join(" ", words);
 
-        Component privateMessageComponent = MessageService.COMPONENT_PARSER.deserialize(PRIVATE_MESSAGE_FORMAT,
-                Placeholder.component("sender_prefix", Component.text(senderAccount.getHighestRank().getPrefix(), senderAccount.getHighestRank().getTextColor())),
-                Placeholder.component("sender_name", Component.text(senderAccount.getName(), senderAccount.getHighestRank().getTextColor())),
-                Placeholder.component("receiver_prefix", Component.text(receiverAccount.getHighestRank().getPrefix(), receiverAccount.getHighestRank().getTextColor())),
-                Placeholder.component("receiver_name", Component.text(receiverAccount.getName(), receiverAccount.getHighestRank().getTextColor())),
-                Placeholder.unparsed("message", message)
-        );
+        Component senderComponent = getPrivateMessageComponent(senderAccount.getLocale(), senderAccount, receiverAccount, message);
+        Component receiverComponent = getPrivateMessageComponent(receiverAccount.getLocale(), senderAccount, receiverAccount, message);
 
-        serviceManager.getProxyMessagingService().sendMessage(player.getPlayer(), receiverAccount.getName(), privateMessageComponent);
-        MessageServiceImpl.getAudiences().player(player.getPlayer()).sendMessage(privateMessageComponent);
-        Bukkit.getLogger().info("[PRIVATE-CHAT] " + player.getPlayerName() + " > " + receiverAccount.getName() + " : " + message);
-        */
+        serviceManager.getProxyMessagingService().sendMessage(player.getPlayer(), receiverAccount.getName(), receiverComponent);
+        MessageServiceImpl.getAudiences().player(player.getPlayer()).sendMessage(senderComponent);
+        Bukkit.getLogger().info("[CHAT] [PRIVATE] " + player.getPlayerName() + " > " + receiverAccount.getName() + " : " + message);
     }
 
     @TabCompleter
@@ -91,4 +92,15 @@ public class PrivateMessageCommand extends Command {
         return args.length == 1 ? GameUtils.getOnlinePlayersPrefixed(args[0]) : List.of();
     }
 
+    private Component getPrivateMessageComponent(Locale locale, PlayerAccount senderAccount, PlayerAccount receiverAccount, String message){
+        String format = locale.translate("private_message_format");
+
+        return MessageService.COMPONENT_PARSER.deserialize(format,
+                Placeholder.component("sender_prefix", Component.text(senderAccount.getHighestRank().getPrefix(), senderAccount.getHighestRank().getTextColor())),
+                Placeholder.component("sender_name", Component.text(senderAccount.getName(), senderAccount.getHighestRank().getTextColor())),
+                Placeholder.component("receiver_prefix", Component.text(receiverAccount.getHighestRank().getPrefix(), receiverAccount.getHighestRank().getTextColor())),
+                Placeholder.component("receiver_name", Component.text(receiverAccount.getName(), receiverAccount.getHighestRank().getTextColor())),
+                Placeholder.unparsed("message", message)
+        );
+    }
 }
