@@ -29,12 +29,12 @@ public class ValueServiceImpl implements ValueService {
     }
 
     @Override
-    public BooleanValueImpl createBooleanValue(String key, String nameKey, String yesDescriptionKey, String noDescriptionKey, boolean value) {
-        return BOOLEAN_MAP.createValueOrReset(key, () -> createUnregisteredBooleanValue(nameKey, yesDescriptionKey, noDescriptionKey, value));
+    public BooleanValueImpl createBooleanValue(String key, String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
+        return BOOLEAN_MAP.createValueOrReset(key, () -> createUnregisteredBooleanValue(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue));
     }
 
     @Override
-    public TimeValueImpl createTimeValue(String key, String nameKey, String descriptionKey, Long defaultValue, Long minValue, Long maxValue, Long smallStep, Long mediumStem, Long largeStep, TimeUnit timeUnit) {
+    public TimeValueImpl createTimeValue(String key, String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
         return TIME_MAP.createValueOrReset(key, () -> createUnregisteredTimeValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit));
     }
 
@@ -45,8 +45,8 @@ public class ValueServiceImpl implements ValueService {
     }
 
     @Override
-    public StringValueImpl createStringValue(String key, String nameKey, String descriptionKey, String value, int minLength, int maxLength) {
-        return STRING_MAP.createValueOrReset(key, () -> createUnregisteredStringValue(nameKey, descriptionKey, value, minLength, maxLength));
+    public StringValueImpl createStringValue(String key, String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
+        return STRING_MAP.createValueOrReset(key, () -> createUnregisteredStringValue(nameKey, descriptionKey, defaultValue, minLength, maxLength));
     }
 
     @Override
@@ -55,12 +55,12 @@ public class ValueServiceImpl implements ValueService {
     }
 
     @Override
-    public BooleanValueImpl createUnregisteredBooleanValue(String nameKey, String yesDescriptionKey, String noDescriptionKey, boolean value) {
-        return new BooleanValueImpl(nameKey, yesDescriptionKey, noDescriptionKey, value);
+    public BooleanValueImpl createUnregisteredBooleanValue(String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
+        return new BooleanValueImpl(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue);
     }
 
     @Override
-    public TimeValueImpl createUnregisteredTimeValue(String nameKey, String descriptionKey, Long defaultValue, Long minValue, Long maxValue, Long smallStep, Long mediumStem, Long largeStep, TimeUnit timeUnit) {
+    public TimeValueImpl createUnregisteredTimeValue(String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
         return new TimeValueImpl(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit);
     }
 
@@ -70,8 +70,8 @@ public class ValueServiceImpl implements ValueService {
     }
 
     @Override
-    public StringValueImpl createUnregisteredStringValue(String nameKey, String descriptionKey, String value, int minLength, int maxLength) {
-        return new StringValueImpl(nameKey, descriptionKey, value, minLength, maxLength);
+    public StringValueImpl createUnregisteredStringValue(String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
+        return new StringValueImpl(nameKey, descriptionKey, defaultValue, minLength, maxLength);
     }
 
     @SuppressWarnings("unchecked")

@@ -57,7 +57,7 @@ public class MessageServiceImpl implements MessageService {
             audiences.close();
     }
 
-    static BukkitAudiences getAudiences() {
+    public static BukkitAudiences getAudiences() {
         return audiences;
     }
 

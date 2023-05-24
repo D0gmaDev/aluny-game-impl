@@ -1,7 +1,8 @@
 package fr.aluny.gameimpl.message;
 
 import fr.aluny.gameapi.message.MessageHandler;
-import java.util.List;
+import java.time.Duration;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 public class DummyMessageHandler implements MessageHandler {
@@ -17,12 +18,17 @@ public class DummyMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void sendTitle(String titleKey, List<TagResolver> titleArgs, String messageKey, List<TagResolver> messageArgs, int fadeIn, int duration, int fadeOut) {
+    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int duration, int fadeOut) {
 
     }
 
     @Override
     public void sendActionBar(String key, TagResolver... arguments) {
+
+    }
+
+    @Override
+    public void showBossBar(String titleKey, TagResolver arguments, BossBar.Color color, BossBar.Overlay overlay, Duration duration) {
 
     }
 }

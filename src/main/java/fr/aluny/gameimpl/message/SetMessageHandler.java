@@ -3,13 +3,14 @@ package fr.aluny.gameimpl.message;
 import fr.aluny.gameapi.message.MessageHandler;
 import fr.aluny.gameapi.player.GamePlayerService;
 import fr.aluny.gameapi.player.OfflineGamePlayer;
+import java.time.Duration;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -39,13 +40,18 @@ public class SetMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void sendTitle(String titleKey, List<TagResolver> titleArgs, String messageKey, List<TagResolver> messageArgs, int fadeIn, int duration, int fadeOut) {
+    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int duration, int fadeOut) {
         fetchReceivers().forEach(messageHandler -> messageHandler.sendTitle(titleKey, titleArgs, messageKey, messageArgs, fadeIn, duration, fadeOut));
     }
 
     @Override
     public void sendActionBar(String key, TagResolver... arguments) {
         fetchReceivers().forEach(messageHandler -> messageHandler.sendActionBar(key, arguments));
+    }
+
+    @Override
+    public void showBossBar(String titleKey, TagResolver arguments, BossBar.Color color, BossBar.Overlay overlay, Duration duration) {
+        fetchReceivers().forEach(messageHandler -> messageHandler.showBossBar(titleKey, arguments, color, overlay, duration));
     }
 
     public static class BroadcastMessageHandler extends SetMessageHandler {

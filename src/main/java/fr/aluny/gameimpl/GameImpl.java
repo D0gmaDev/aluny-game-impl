@@ -3,28 +3,9 @@ package fr.aluny.gameimpl;
 import fr.aluny.alunyapi.generated.ApiClient;
 import fr.aluny.alunyapi.generated.Configuration;
 import fr.aluny.gameapi.IAlunyGame;
-import fr.aluny.gameapi.chat.ChatService;
-import fr.aluny.gameapi.command.CommandService;
 import fr.aluny.gameapi.inventory.InventoryHelper;
-import fr.aluny.gameapi.message.MessageService;
-import fr.aluny.gameapi.moderation.ModerationService;
-import fr.aluny.gameapi.moderation.VanishService;
-import fr.aluny.gameapi.player.GamePlayerService;
-import fr.aluny.gameapi.player.PlayerAccountService;
-import fr.aluny.gameapi.player.rank.RankService;
-import fr.aluny.gameapi.proxy.ProxyMessagingService;
-import fr.aluny.gameapi.scoreboard.ScoreboardService;
-import fr.aluny.gameapi.scoreboard.team.ScoreboardTeamService;
-import fr.aluny.gameapi.service.Service;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.settings.ServerSettings;
-import fr.aluny.gameapi.timer.RunnableHelper;
-import fr.aluny.gameapi.timer.TimerService;
-import fr.aluny.gameapi.translation.TranslationService;
-import fr.aluny.gameapi.value.ValueService;
-import fr.aluny.gameapi.world.LootModifierService;
-import fr.aluny.gameapi.world.SchematicService;
-import fr.aluny.gameapi.world.anchor.AnchorService;
 import fr.aluny.gameimpl.api.PlayerAPI;
 import fr.aluny.gameimpl.api.PlayerSanctionAPI;
 import fr.aluny.gameimpl.api.RankAPI;
@@ -55,7 +36,6 @@ import fr.aluny.gameimpl.world.LootModifierServiceImpl;
 import fr.aluny.gameimpl.world.SchematicServiceImpl;
 import fr.aluny.gameimpl.world.anchor.AnchorServiceImpl;
 import java.util.Optional;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginManager;
@@ -64,18 +44,22 @@ import xyz.xenondevs.invui.InvUI;
 
 public class GameImpl extends JavaPlugin implements IAlunyGame {
 
+    private static JavaPlugin plugin;
+
     private ServiceManagerImpl serviceManager;
 
     private ServerSettingsImpl serverSettings;
 
     @Override
     public void onEnable() {
+        plugin = this;
+
         Logger logger = Bukkit.getLogger();
 
-        logger.log(Level.INFO, "===============[ GAME ]===============");
-        logger.log(Level.INFO, "        Enabling Game by D0gma_       ");
-        logger.log(Level.INFO, "   Please read carefully any output   ");
-        logger.log(Level.INFO, "======================================");
+        logger.info("===============[ GAME ]===============");
+        logger.info("        Enabling Game by D0gma_       ");
+        logger.info("   Please read carefully any output   ");
+        logger.info("======================================");
 
         this.serverSettings = new ServerSettingsImpl();
 
@@ -110,27 +94,27 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         VanishServiceImpl vanishService = new VanishServiceImpl(this, gamePlayerService);
 
         /* Services registration */
-        serviceManager.registerService(RunnableHelper.class, runnableHelper);
-        serviceManager.registerService(AnchorService.class, anchorService);
-        serviceManager.registerService(ChatService.class, chatService);
-        serviceManager.registerService(CommandService.class, commandService);
-        serviceManager.registerService(GamePlayerService.class, gamePlayerService);
-        serviceManager.registerService(LootModifierService.class, lootModifierService);
-        serviceManager.registerService(MessageService.class, messageService);
-        serviceManager.registerService(ModerationService.class, moderationService);
-        serviceManager.registerService(PlayerAccountService.class, playerService);
-        serviceManager.registerService(ProxyMessagingService.class, proxyMessagingService);
-        serviceManager.registerService(RankService.class, rankService);
-        serviceManager.registerService(SchematicService.class, schematicService);
-        serviceManager.registerService(ScoreboardService.class, scoreboardService);
-        serviceManager.registerService(ScoreboardTeamService.class, scoreboardTeamService);
-        serviceManager.registerService(TimerService.class, timerService);
-        serviceManager.registerService(TranslationService.class, translationService);
-        serviceManager.registerService(ValueService.class, valueService);
-        serviceManager.registerService(VanishService.class, vanishService);
+        serviceManager.setRunnableHelper(runnableHelper);
+        serviceManager.setAnchorService(anchorService);
+        serviceManager.setChatService(chatService);
+        serviceManager.setCommandService(commandService);
+        serviceManager.setGamePlayerService(gamePlayerService);
+        serviceManager.setLootModifierService(lootModifierService);
+        serviceManager.setMessageService(messageService);
+        serviceManager.setModerationService(moderationService);
+        serviceManager.setPlayerAccountService(playerService);
+        serviceManager.setProxyMessagingService(proxyMessagingService);
+        serviceManager.setRankService(rankService);
+        serviceManager.setSchematicService(schematicService);
+        serviceManager.setScoreboardService(scoreboardService);
+        serviceManager.setScoreboardTeamService(scoreboardTeamService);
+        serviceManager.setTimerService(timerService);
+        serviceManager.setTranslationService(translationService);
+        serviceManager.setValueService(valueService);
+        serviceManager.setVanishService(vanishService);
 
         /* Services initialisation */
-        serviceManager.getAllServices().forEach(Service::initialize);
+        serviceManager.initializeServices();
 
         /* Listeners registration */
         PluginManager pluginManager = getServer().getPluginManager();
@@ -152,15 +136,15 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         /* Translations */
         translationService.loadTranslations(this, "fr-fr", "lang/fr.properties");
 
-        logger.log(Level.INFO, "===============[ GAME ]===============");
-        logger.log(Level.INFO, "          Game plugin enabled         ");
-        logger.log(Level.INFO, "======================================");
+        logger.info("===============[ GAME ]===============");
+        logger.info("          Game plugin enabled         ");
+        logger.info("======================================");
     }
 
     @Override
     public void onDisable() {
         /* Services shutdown */
-        serviceManager.getAllServices().forEach(Service::shutdown);
+        serviceManager.shutdownServices();
     }
 
     @Override
@@ -171,5 +155,9 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
     @Override
     public ServerSettings getServerSettings() {
         return Optional.ofNullable(this.serverSettings).orElseThrow(() -> new IllegalStateException("Game ServerSettings not initialized"));
+    }
+
+    public static JavaPlugin getPlugin() {
+        return plugin;
     }
 }

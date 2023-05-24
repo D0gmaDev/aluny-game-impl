@@ -16,13 +16,14 @@ public class StringValueImpl extends Value<String> implements StringValue {
 
     private String value;
 
-    public StringValueImpl(String nameKey, String descriptionKey, String value, int minLength, int maxLength) {
+    public StringValueImpl(String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
         this.nameKey = nameKey;
         this.descriptionKey = descriptionKey;
-        this.value = value;
-        this.defaultValue = this.value;
         this.minLength = minLength;
         this.maxLength = maxLength;
+
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
     }
 
     @Override
@@ -37,6 +38,11 @@ public class StringValueImpl extends Value<String> implements StringValue {
 
     @Override
     public void setValue(String value) {
+        if (value.length() < getMinLength())
+            value += " ".repeat(getMinLength() - value.length());
+        if (value.length() > getMaxLength())
+            value = value.substring(0, getMaxLength());
+
         String oldValue = this.value;
         this.value = value;
         onValueChanged(oldValue, value);

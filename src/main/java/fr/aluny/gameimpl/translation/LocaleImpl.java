@@ -1,13 +1,11 @@
 package fr.aluny.gameimpl.translation;
 
 import fr.aluny.gameapi.translation.Locale;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 public class LocaleImpl implements Locale {
 
@@ -32,13 +30,11 @@ public class LocaleImpl implements Locale {
 
     @Override
     public List<TranslationPair> getAllTranslationsStartingWith(String prefix) {
-        List<TranslationPair> translations = new ArrayList<>();
-        this.translations.forEach((s, s2) -> {
-            if (s.startsWith(prefix))
-                translations.add(new TranslationPair(s, s2));
-        });
-
-        return translations.stream().sorted(Comparator.comparing(TranslationPair::key)).collect(Collectors.toList());
+        return this.translations.entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(prefix))
+                .map(entry -> new TranslationPair(entry.getKey(), entry.getValue()))
+                .sorted(Comparator.comparing(TranslationPair::key))
+                .toList();
     }
 
     @Override
@@ -70,6 +66,7 @@ public class LocaleImpl implements Locale {
             return translationService.getDefaultLocale().translate(key);
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public String translate(String key, Object... arguments) {
         if (this.translations.containsKey(key))
@@ -100,6 +97,7 @@ public class LocaleImpl implements Locale {
         return "LocaleImpl{" +
                 "code='" + code + '\'' +
                 ", defaultLocale=" + defaultLocale +
+                ", translations=" + translations.size() +
                 '}';
     }
 }

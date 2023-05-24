@@ -32,12 +32,7 @@ public class EnumValueImpl<T extends Enum<T>> extends Value<T> implements EnumVa
 
     @Override
     public void decrement() {
-        if (getValueIndex() == 0) {
-            setIndexValue(this.enumeration.length - 1);
-            return;
-        }
-
-        setIndexValue((getValueIndex() - 1));
+        setIndexValue((getValueIndex() - 1 + this.enumeration.length) % this.enumeration.length);
     }
 
     @Override
