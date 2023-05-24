@@ -10,9 +10,11 @@ import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameapi.utils.GameUtils;
 import fr.aluny.gameapi.utils.TimeUtils;
 import fr.aluny.gameimpl.api.PlayerSanctionAPI;
+import fr.aluny.gameimpl.message.MessageServiceImpl;
 import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
@@ -49,6 +51,7 @@ public class MuteCommand extends Command {
                     click.getPlayer().closeInventory();
                     playerSanctionAPI.applySanction(playerAccount, player, SanctionType.MUTE, duration, String.join(" ", args)).ifPresent(sanction ->
                             player.getMessageHandler().sendComponentMessage("moderation_successfully_muted", Placeholder.unparsed("name", playerAccount.getName()), Placeholder.unparsed("id", String.valueOf(sanction.getId()))));
+
                     serviceManager.getProxyMessagingService().sendMessage(player.getPlayer(), playerAccount.getName(), getMuteMessage(playerAccount.getLocale(), duration));
                 });
 
@@ -73,8 +76,8 @@ public class MuteCommand extends Command {
         return args.length == 1 ? GameUtils.getOnlinePlayersPrefixed(args[0]) : List.of();
     }
 
-    private String getMuteMessage(Locale locale, TemporalAmount duration) {
-        return locale.translate("moderation_mute_message", TimeUtils.format(duration));
+    private Component getMuteMessage(Locale locale, TemporalAmount duration) {
+        return MessageServiceImpl.COMPONENT_PARSER.deserialize(locale.translate("moderation_mute_message"), Placeholder.unparsed("duration", TimeUtils.format(duration)));
     }
 
 }

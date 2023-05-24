@@ -17,9 +17,9 @@ import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.invui.gui.PagedGui;
@@ -57,7 +57,9 @@ public class CasierCommand extends Command {
         serviceManager.getPlayerAccountService().getPlayerAccountByName(name).ifPresentOrElse(playerAccount -> {
 
             Item headItem = new SimpleItem(new SkullBuilder(playerAccount.getName())
-                    .setDisplayName(new Translation("casier_target_name", Placeholder.component("name", LegacyComponentSerializer.legacySection().deserialize(playerAccount.getHighestRank().getPrefix() + playerAccount.getName()))))
+                    .setDisplayName(new Translation("casier_target_name",
+                            Placeholder.component("prefix", Component.text(playerAccount.getHighestRank().getPrefix(), playerAccount.getHighestRank().getTextColor())),
+                            Placeholder.component("name", Component.text(playerAccount.getName(), playerAccount.getHighestRank().getTextColor()))))
                     .addLoreLines(new Translation("casier_first_connection", Formatter.date("date", playerAccount.getCreationDate()))));
 
             List<DetailedPlayerSanction> playerDetailedSanctions = playerSanctionAPI.getPlayerDetailedSanctions(playerAccount, 30, 0);
@@ -70,9 +72,8 @@ public class CasierCommand extends Command {
                             new Translation("casier_date", Formatter.date("date", sanction.getStartAt())),
                             new Translation("casier_duration", Placeholder.unparsed("duration", TimeUtils.format(Duration.between(sanction.getStartAt(), sanction.getEndAt())))))
                     .addLoreLines(" ")
-                    .addLoreLines(new Translation("casier_state", Formatter.choice("state", sanction.isCanceled() ? 2 : (sanction.isActive() ? 0 : 1)))
-                    ))).collect(Collectors.toList());
-
+                    .addLoreLines(new Translation("casier_state", Formatter.choice("state", sanction.isCanceled() ? 2 : (sanction.isActive() ? 0 : 1))))
+            )).collect(Collectors.toList());
 
             PagedGui<Item> gui = PagedGui.items().setStructure(9, 5, CASIER_STRUCTURE).addIngredient('h', headItem).setContent(items).build();
 

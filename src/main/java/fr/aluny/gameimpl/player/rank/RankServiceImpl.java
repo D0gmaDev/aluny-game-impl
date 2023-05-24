@@ -8,10 +8,13 @@ import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.settings.ServerSettings;
 import fr.aluny.gameimpl.api.RankAPI;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -43,12 +46,20 @@ public class RankServiceImpl implements RankService {
 
     @Override
     public void initialize() {
-        for (Rank rank : rankAPI.loadAllRanks()) {
-            char importancePrefix = (char) ('z' - rank.getImportanceIndex()); // To sort correctly the teams in the tab list (it sorts alphabetically by the name of the team)
-            ScoreboardTeam scoreboardTeam = serviceManager.getScoreboardTeamService().registerScoreboardTeam(importancePrefix + rank.getName(), rank.getPrefix());
+        List<Rank> ranks = rankAPI.loadAllRanks().stream().sorted(Comparator.comparingInt(Rank::getImportanceIndex).reversed()).toList();
+
+        int offset = 0;
+        for (Rank rank : ranks) {
+            char importancePrefix = (char) ('A' + offset++); // To sort correctly the teams in the tab list (it sorts alphabetically by the name of the team)
+
+            String prefix = ChatColor.of(rank.getColorCode()) + rank.getPrefix();
+
+            ScoreboardTeam scoreboardTeam = serviceManager.getScoreboardTeamService().registerScoreboardTeam(importancePrefix + rank.getName(), prefix);
             this.ranks.put(rank, scoreboardTeam);
             this.ranksById.put(rank.getId(), rank);
         }
+
+        Bukkit.getLogger().info("[RANK] Successfully loaded " + ranks.size() + " ranks.");
     }
 
     public void onPlayerJoin(GamePlayer gamePlayer, PlayerAccount playerAccount) {

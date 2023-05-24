@@ -28,8 +28,8 @@ public class TimerImpl implements Timer {
         SECONDS_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
-    private final Long     delay;
-    private final Long     step;
+    private final long     delay;
+    private final long     step;
     private final TimeUnit timeUnit;
 
     private Long stop;
@@ -112,6 +112,9 @@ public class TimerImpl implements Timer {
 
     @Override
     public String getDecreasingFormattedValue() {
+        if (this.stop == null)
+            return "∞";
+
         long value = TimeUnit.SECONDS.convert(this.stop, this.timeUnit) - this.value;
 
         SimpleDateFormat simpleDateFormat = value >= 3600 ? HOURS_DATE_FORMAT : (value >= 60 ? MINUTES_DATE_FORMAT : SECONDS_DATE_FORMAT);
@@ -135,7 +138,7 @@ public class TimerImpl implements Timer {
 
     @Override
     public long getMaxValue() {
-        return this.stop;
+        return this.stop != null ? this.stop : Long.MAX_VALUE;
     }
 
     @Override

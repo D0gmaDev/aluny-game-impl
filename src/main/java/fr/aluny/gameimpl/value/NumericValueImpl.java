@@ -48,12 +48,14 @@ public class NumericValueImpl<T extends Number> extends Value<T> implements Nume
 
     @Override
     public String getStringValue() {
-        if (getValue() instanceof Integer) {
-            return Integer.toString((Integer) getValue());
-        } else if (getValue() instanceof Double) {
-            return DOUBLE_DECIMAL.format(getValue().doubleValue());
-        } else if (getValue() instanceof Float) {
-            return DOUBLE_DECIMAL.format(getValue().floatValue());
+        if (getValue() instanceof Integer integerValue) {
+            return Integer.toString(integerValue);
+        } else if (getValue() instanceof Long longValue) {
+            return Long.toString(longValue);
+        } else if (getValue() instanceof Double doubleValue) {
+            return DOUBLE_DECIMAL.format(doubleValue);
+        } else if (getValue() instanceof Float floatValue) {
+            return DOUBLE_DECIMAL.format(floatValue);
         }
 
         return getValue().toString();

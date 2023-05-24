@@ -3,6 +3,7 @@ package fr.aluny.gameimpl.player.rank;
 import fr.aluny.gameapi.player.rank.Rank;
 import java.util.Collections;
 import java.util.Set;
+import net.kyori.adventure.text.format.TextColor;
 
 public final class RankImpl implements Rank {
 
@@ -11,6 +12,7 @@ public final class RankImpl implements Rank {
     private final int         importanceIndex;
     private final String      prefix;
     private final String      colorCode;
+    private final TextColor   textColor;
     private final Set<String> permissions;
     private final boolean     superUser;
 
@@ -20,6 +22,7 @@ public final class RankImpl implements Rank {
         this.importanceIndex = importanceIndex;
         this.prefix = prefix;
         this.colorCode = colorCode;
+        this.textColor = TextColor.fromHexString(colorCode);
         this.permissions = permissions;
         this.superUser = permissions.contains("*");
     }
@@ -47,6 +50,11 @@ public final class RankImpl implements Rank {
     @Override
     public String getColorCode() {
         return this.colorCode;
+    }
+
+    @Override
+    public TextColor getTextColor() {
+        return this.textColor;
     }
 
     @Override
