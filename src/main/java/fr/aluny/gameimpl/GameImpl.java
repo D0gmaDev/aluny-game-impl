@@ -19,6 +19,7 @@ import fr.aluny.gameimpl.moderation.VanishServiceImpl;
 import fr.aluny.gameimpl.player.GamePlayerServiceImpl;
 import fr.aluny.gameimpl.player.PlayerAccountServiceImpl;
 import fr.aluny.gameimpl.player.PlayerListener;
+import fr.aluny.gameimpl.player.command.PrivateMessageCommand;
 import fr.aluny.gameimpl.player.rank.RankServiceImpl;
 import fr.aluny.gameimpl.proxy.ProxyMessagingServiceImpl;
 import fr.aluny.gameimpl.scoreboard.ScoreboardServiceImpl;
@@ -123,7 +124,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         pluginManager.registerEvents(new PlayerListener(this, serviceManager), this);
 
         /* Commands registration */
-        //commandService.registerRuntimeCommand(new TestCommand(chatService));
+        commandService.registerRuntimeCommand(new PrivateMessageCommand(serviceManager));
 
         /* Inventories startup */
         InvUI.getInstance().setPlugin(this);

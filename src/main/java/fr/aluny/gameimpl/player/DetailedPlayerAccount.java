@@ -11,14 +11,20 @@ import java.util.UUID;
 public class DetailedPlayerAccount extends PlayerAccountImpl {
 
     private final List<PlayerSanction> currentSanctions;
+    private final boolean              allowsPrivateMessages;
 
-    public DetailedPlayerAccount(UUID uuid, String name, Integer currentServerId, Locale locale, Set<Rank> ranks, OffsetDateTime creationDate, List<PlayerSanction> currentSanctions) {
+    public DetailedPlayerAccount(UUID uuid, String name, Integer currentServerId, Locale locale, Set<Rank> ranks, OffsetDateTime creationDate, List<PlayerSanction> currentSanctions, boolean allowsPrivateMessages) {
         super(uuid, name, currentServerId, locale, ranks, creationDate);
         this.currentSanctions = currentSanctions;
+        this.allowsPrivateMessages = allowsPrivateMessages;
     }
 
     public List<PlayerSanction> getCurrentSanctions() {
         return this.currentSanctions;
+    }
+
+    public boolean doesAllowPrivateMessages() {
+        return this.allowsPrivateMessages;
     }
 
     @Override
@@ -32,6 +38,7 @@ public class DetailedPlayerAccount extends PlayerAccountImpl {
                 ", creationDate=" + getCreationDate() +
                 ", highestRank=" + getHighestRank() +
                 ", currentSanctions=" + currentSanctions.size() +
+                ", allowsPrivateMessages=" + allowsPrivateMessages +
                 '}';
     }
 }

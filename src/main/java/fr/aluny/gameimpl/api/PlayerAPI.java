@@ -77,8 +77,9 @@ public class PlayerAPI {
             PlayerDetailsDTO player = apiInstance.getPlayerDetails(uuid);
 
             List<PlayerSanction> sanctions = player.getCurrentSanctions() == null ? List.of() : player.getCurrentSanctions().stream().map(PlayerSanctionAPI::buildSanction).toList();
+            boolean allowsPrivateMessages = player.getSettings() != null && player.getSettings().getCanReceivePrivateMessages() != null ? player.getSettings().getCanReceivePrivateMessages() : true;
 
-            return Optional.of(new DetailedPlayerAccount(player.getUuid(), player.getUsername(), player.getCurrentServerId(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt(), sanctions));
+            return Optional.of(new DetailedPlayerAccount(player.getUuid(), player.getUsername(), player.getCurrentServerId(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt(), sanctions, allowsPrivateMessages));
 
         } catch (ApiException e) {
             System.err.println("Exception when calling PlayerControllerApi#getPlayerDetails");
