@@ -4,6 +4,7 @@ import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
 import fr.aluny.gameapi.command.TabCompleter;
+import fr.aluny.gameapi.inventory.Translation;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.translation.Locale;
@@ -16,7 +17,6 @@ import java.time.temporal.TemporalAmount;
 import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.invui.gui.Gui;
@@ -47,7 +47,7 @@ public class MuteCommand extends Command {
                     return;
                 }
 
-                SimpleItem validationItem = new SimpleItem(new ItemBuilder(Material.LIME_CANDLE).setDisplayName("§aValider"), click -> {
+                SimpleItem validationItem = new SimpleItem(new ItemBuilder(Material.LIME_CANDLE).setDisplayName(new Translation("sanction_validate")), click -> {
                     click.getPlayer().closeInventory();
                     playerSanctionAPI.applySanction(playerAccount, player, SanctionType.MUTE, duration, String.join(" ", args)).ifPresent(sanction ->
                             player.getMessageHandler().sendComponentMessage("moderation_successfully_muted", Placeholder.unparsed("name", playerAccount.getName()), Placeholder.unparsed("id", String.valueOf(sanction.getId()))));
@@ -55,16 +55,14 @@ public class MuteCommand extends Command {
                     serviceManager.getProxyMessagingService().sendMessage(player.getPlayer(), playerAccount.getName(), getMuteMessage(playerAccount.getLocale(), duration));
                 });
 
-                ChatColor color = ChatColor.of("#4e6654");
+                SimpleItem infoItem = new SimpleItem(new ItemBuilder(Material.PAPER).setDisplayName(new Translation("sanction_mute_player", Placeholder.unparsed("name", playerAccount.getName())))
+                        .addLoreLines(new Translation("sanction_duration", Placeholder.unparsed("duration", TimeUtils.format(duration))), new Translation("sanction_reason", Placeholder.unparsed("reason", String.join(" ", args)))));
 
-                SimpleItem infoItem = new SimpleItem(new ItemBuilder(Material.PAPER).setDisplayName(ChatColor.of("#70cc89") + "Rendre muet " + playerAccount.getName())
-                        .addLoreLines(color + "Durée: §7" + TimeUtils.format(duration), color + "Raison: §7" + String.join(" ", args)));
-
-                SimpleItem cancelItem = new SimpleItem(new ItemBuilder(Material.RED_CANDLE).setDisplayName("§cAnnuler"), click -> click.getPlayer().closeInventory());
+                SimpleItem cancelItem = new SimpleItem(new ItemBuilder(Material.RED_CANDLE).setDisplayName(new Translation("sanction_cancel")), click -> click.getPlayer().closeInventory());
 
                 Gui gui = Gui.normal().setStructure("v.i.a").addIngredient('v', validationItem).addIngredient('i', infoItem).addIngredient('a', cancelItem).build();
 
-                Window.single().setGui(gui).setTitle(color + "Confirmation du mute").open(player.getPlayer());
+                Window.single().setGui(gui).setTitle(new Translation("sanction_mute_title")).open(player.getPlayer());
 
             }, () -> player.getMessageHandler().sendMessage("command_validation_invalid_duration", durationString));
 
