@@ -23,14 +23,14 @@ import xyz.xenondevs.invui.item.builder.ItemBuilder;
 import xyz.xenondevs.invui.item.impl.SimpleItem;
 import xyz.xenondevs.invui.window.Window;
 
-@CommandInfo(name = "unban", permission = "fr.aluny.command.unban", asyncCall = true)
-public class UnbanCommand extends Command {
+@CommandInfo(name = "unmute", permission = "fr.aluny.command.unmute", asyncCall = true)
+public class UnmuteCommand extends Command {
 
     private final PlayerSanctionAPI playerSanctionAPI;
     private final PlayerAPI         playerAPI;
     private final ServiceManager    serviceManager;
 
-    public UnbanCommand(PlayerSanctionAPI playerSanctionAPI, PlayerAPI playerAPI, ServiceManager serviceManager) {
+    public UnmuteCommand(PlayerSanctionAPI playerSanctionAPI, PlayerAPI playerAPI, ServiceManager serviceManager) {
         this.playerSanctionAPI = playerSanctionAPI;
         this.playerAPI = playerAPI;
         this.serviceManager = serviceManager;
@@ -42,7 +42,7 @@ public class UnbanCommand extends Command {
         serviceManager.getPlayerAccountService().getPlayerAccountByName(targetName)
                 .flatMap(playerAccount -> playerAPI.getDetailedPlayer(playerAccount.getUuid()))
                 .ifPresentOrElse(playerAccount -> playerAccount.getCurrentSanctions().stream()
-                        .filter(playerSanction -> playerSanction.isType(SanctionType.BAN) && !playerSanction.isCanceled() && playerSanction.isActive()).findAny()
+                        .filter(playerSanction -> playerSanction.isType(SanctionType.MUTE) && !playerSanction.isCanceled() && playerSanction.isActive()).findAny()
                         .flatMap(sanction -> playerSanctionAPI.getPlayerSanctionById(sanction.getId()))
                         .ifPresentOrElse(sanction -> {
 
@@ -55,7 +55,7 @@ public class UnbanCommand extends Command {
                             });
 
                             SimpleItem infoItem = new SimpleItem(new ItemBuilder(Material.PAPER).setDisplayName(
-                                    new Translation("sanction_unban_player", Placeholder.unparsed("id", String.valueOf(sanction.getId())), name(playerAccount))).addLoreLines(
+                                    new Translation("sanction_unmute_player", Placeholder.unparsed("id", String.valueOf(sanction.getId())), name(playerAccount))).addLoreLines(
                                     new Translation("sanction_author", Placeholder.unparsed("author", serviceManager.getPlayerAccountService().getPlayerAccount(sanction.getAuthor()).map(PlayerAccount::getName).orElse(sanction.getAuthor().toString()))),
                                     new Translation("sanction_reason", Placeholder.unparsed("reason", sanction.getDescription())))
                             );
@@ -64,7 +64,7 @@ public class UnbanCommand extends Command {
 
                             Gui gui = Gui.normal().setStructure("v.i.a").addIngredient('v', validationItem).addIngredient('i', infoItem).addIngredient('a', cancelItem).build();
 
-                            Window window = Window.single().setTitle(new Translation("sanction_unban_title")).setGui(gui).build(player.getPlayer());
+                            Window window = Window.single().setTitle(new Translation("sanction_unmute_title")).setGui(gui).build(player.getPlayer());
                             serviceManager.getRunnableHelper().runSynchronously(window::open);
 
                         }, () -> player.getMessageHandler().sendComponentMessage("moderation_sanction_not_found", name(playerAccount))), () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", targetName));
