@@ -5,10 +5,11 @@ import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameimpl.api.PlayerAPI;
 import fr.aluny.gameimpl.api.PlayerSanctionAPI;
 import fr.aluny.gameimpl.moderation.command.BanCommand;
-import fr.aluny.gameimpl.moderation.command.CancelSanctionCommand;
 import fr.aluny.gameimpl.moderation.command.CasierCommand;
 import fr.aluny.gameimpl.moderation.command.KickCommand;
 import fr.aluny.gameimpl.moderation.command.MuteCommand;
+import fr.aluny.gameimpl.moderation.command.UnbanCommand;
+import fr.aluny.gameimpl.moderation.command.UnmuteCommand;
 import fr.aluny.gameimpl.moderation.sanction.PlayerSanction;
 import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.time.OffsetDateTime;
@@ -34,7 +35,8 @@ public class ModerationServiceImpl implements fr.aluny.gameapi.moderation.Modera
         commandService.registerRuntimeCommand(new BanCommand(playerSanctionAPI, serviceManager));
         commandService.registerRuntimeCommand(new MuteCommand(playerSanctionAPI, serviceManager));
         commandService.registerRuntimeCommand(new KickCommand(playerSanctionAPI, serviceManager));
-        commandService.registerRuntimeCommand(new CancelSanctionCommand(playerSanctionAPI, serviceManager));
+        commandService.registerRuntimeCommand(new UnbanCommand(playerSanctionAPI, playerAPI, serviceManager));
+        commandService.registerRuntimeCommand(new UnmuteCommand(playerSanctionAPI, playerAPI, serviceManager));
         commandService.registerRuntimeCommand(new CasierCommand(playerSanctionAPI, playerAPI, serviceManager));
     }
 

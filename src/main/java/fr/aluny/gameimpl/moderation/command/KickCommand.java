@@ -31,8 +31,12 @@ public class KickCommand extends Command {
     @Default
     public void defaultContext(GamePlayer player, String name, String[] args) {
 
-        //TODO check isOnline
         serviceManager.getPlayerAccountService().getPlayerAccountByName(name).ifPresentOrElse(playerAccount -> {
+
+            if (!playerAccount.isOnline()) {
+                player.getMessageHandler().sendComponentMessage("moderation_target_offline", Placeholder.unparsed("name", playerAccount.getName()));
+                return;
+            }
 
             if (args.length == 0) {
                 player.getMessageHandler().sendMessage("moderation_provide_reason");

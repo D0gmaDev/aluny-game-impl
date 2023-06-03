@@ -68,7 +68,7 @@ public class CasierCommand extends Command {
                     .setDisplayName(new Translation("casier_details_title", Placeholder.unparsed("type", sanction.getSanctionType().name()), Placeholder.unparsed("id", String.valueOf(sanction.getId()))))
                     .addLoreLines(
                             new Translation("casier_reason", Placeholder.unparsed("reason", sanction.getDescription())),
-                            new Translation("casier_author", Placeholder.unparsed("author", playerAPI.getPlayer(sanction.getAuthor()).map(PlayerAccount::getName).orElse("Erreur..."))),
+                            new Translation("casier_author", Placeholder.unparsed("author", playerAPI.getPlayer(sanction.getAuthor()).map(PlayerAccount::getName).orElse(sanction.getAuthor().toString()))),
                             new Translation("casier_date", Formatter.date("date", sanction.getStartAt())),
                             new Translation("casier_duration", Placeholder.unparsed("duration", TimeUtils.format(Duration.between(sanction.getStartAt(), sanction.getEndAt())))))
                     .addLoreLines(" ")
