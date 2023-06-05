@@ -2,6 +2,7 @@ package fr.aluny.gameimpl;
 
 import fr.aluny.alunyapi.generated.ApiClient;
 import fr.aluny.alunyapi.generated.Configuration;
+import fr.aluny.alunyapi.generated.auth.HttpBearerAuth;
 import fr.aluny.gameapi.IAlunyGame;
 import fr.aluny.gameapi.inventory.InventoryHelper;
 import fr.aluny.gameapi.service.ServiceManager;
@@ -44,6 +45,9 @@ import xyz.xenondevs.invui.InvUI;
 
 public class GameImpl extends JavaPlugin implements IAlunyGame {
 
+    private final static String API_BASE_PATH = System.getenv("GAME_API_BASE_PATH");
+    private final static String API_TOKEN     = System.getenv("GAME_API_TOKEN");
+
     private static JavaPlugin plugin;
 
     private ServiceManagerImpl serviceManager;
@@ -65,10 +69,25 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
 
         this.serviceManager = new ServiceManagerImpl();
 
-        /* API */
-        ApiClient apiClient = Configuration.getDefaultApiClient();
-        apiClient.setBasePath("http://elity.fr:8080");
+        /* API connection */
+        if (API_BASE_PATH == null) {
+            Bukkit.getLogger().severe("No api connection path specified in the environment variables ('GAME_API_BASE_PATH')");
+            setEnabled(false);
+            return;
+        }
 
+        if (API_TOKEN == null) {
+            Bukkit.getLogger().severe("No api token specified in the environment variables ('GAME_API_TOKEN')");
+            setEnabled(false);
+            return;
+        }
+
+        ApiClient apiClient = Configuration.getDefaultApiClient();
+        apiClient.setServerIndex(null);
+        apiClient.setBasePath(API_BASE_PATH);
+        ((HttpBearerAuth) apiClient.getAuthentication("api_key")).setBearerToken(API_TOKEN);
+
+        /* API managers */
         RankAPI rankAPI = new RankAPI(apiClient);
         PlayerAPI playerAPI = new PlayerAPI(apiClient, serviceManager);
         PlayerSanctionAPI playerSanctionAPI = new PlayerSanctionAPI(apiClient);
@@ -144,7 +163,8 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
     @Override
     public void onDisable() {
         /* Services shutdown */
-        serviceManager.shutdownServices();
+        if (isEnabled())
+            serviceManager.shutdownServices();
     }
 
     @Override

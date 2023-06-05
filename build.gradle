@@ -41,7 +41,7 @@ dependencies {
     implementation group: "fr.aluny", name: "game-api", version: "develop-SNAPSHOT", changing: true
 
     implementation "xyz.xenondevs.invui:invui:1.9"
-    implementation "fr.aluny.alunyapi:alunyapi-client:0.0.3"
+    implementation "fr.aluny.alunyapi:alunyapi-client:0.0.4"
 
     implementation "net.kyori:adventure-platform-bukkit:4.3.0"
     implementation "net.kyori:adventure-text-minimessage:4.13.1"
