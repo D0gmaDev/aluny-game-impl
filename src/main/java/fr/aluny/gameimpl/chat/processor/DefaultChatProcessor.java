@@ -6,13 +6,10 @@ import fr.aluny.gameapi.message.MessageService;
 import fr.aluny.gameapi.player.PlayerAccountService;
 import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameapi.translation.TranslationService;
-import fr.aluny.gameimpl.message.MessageServiceImpl;
 import fr.aluny.gameimpl.player.GamePlayerImpl;
-import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
 
 public class DefaultChatProcessor implements ChatProcessor {
 
@@ -37,15 +34,11 @@ public class DefaultChatProcessor implements ChatProcessor {
         Component prefix = Component.text(highestRank.getPrefix(), highestRank.getTextColor());
         Component name = Component.text(processedChat.getSender().getPlayerName(), highestRank.getTextColor());
 
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            Audience player = MessageServiceImpl.getAudiences().player(onlinePlayer);
-
-            player.sendMessage(MessageService.COMPONENT_PARSER.deserialize(this.chatFormat,
-                    Placeholder.component("prefix", prefix),
-                    Placeholder.component("name", name),
-                    Placeholder.component("message", processedChat.getContentForPlayer(onlinePlayer.getUniqueId()))
-            ));
-        }
+        Bukkit.getOnlinePlayers().forEach(player -> player.sendMessage(MessageService.COMPONENT_PARSER.deserialize(this.chatFormat,
+                Placeholder.component("prefix", prefix),
+                Placeholder.component("name", name),
+                Placeholder.component("message", processedChat.getContentForPlayer(player.getUniqueId()))
+        )));
 
         Bukkit.getLogger().info("[CHAT] " + processedChat.getSender().getPlayerName() + ": " + processedChat.getMessageContent().content());
     }

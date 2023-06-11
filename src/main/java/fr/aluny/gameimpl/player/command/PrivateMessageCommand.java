@@ -10,7 +10,6 @@ import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameapi.utils.GameUtils;
-import fr.aluny.gameimpl.message.MessageServiceImpl;
 import fr.aluny.gameimpl.player.DetailedPlayerAccount;
 import fr.aluny.gameimpl.player.PlayerAccountServiceImpl;
 import java.util.List;
@@ -83,7 +82,7 @@ public class PrivateMessageCommand extends Command {
         Component receiverComponent = getPrivateMessageComponent(receiverAccount.getLocale(), senderAccount, receiverAccount, message);
 
         serviceManager.getProxyMessagingService().sendMessage(player.getPlayer(), receiverAccount.getName(), receiverComponent);
-        MessageServiceImpl.getAudiences().player(player.getPlayer()).sendMessage(senderComponent);
+        player.getPlayer().sendMessage(senderComponent);
         Bukkit.getLogger().info("[CHAT] [PRIVATE] " + player.getPlayerName() + " > " + receiverAccount.getName() + " : " + message);
     }
 

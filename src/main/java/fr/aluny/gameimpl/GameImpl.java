@@ -70,17 +70,11 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         this.serviceManager = new ServiceManagerImpl();
 
         /* API connection */
-        if (API_BASE_PATH == null) {
-            Bukkit.getLogger().severe("No api connection path specified in the environment variables ('GAME_API_BASE_PATH')");
-            setEnabled(false);
-            return;
-        }
+        if (API_BASE_PATH == null)
+            throw new IllegalStateException("No api connection path specified in the environment variables ('GAME_API_BASE_PATH')");
 
-        if (API_TOKEN == null) {
-            Bukkit.getLogger().severe("No api token specified in the environment variables ('GAME_API_TOKEN')");
-            setEnabled(false);
-            return;
-        }
+        if (API_TOKEN == null)
+            throw new IllegalStateException("No api token specified in the environment variables ('GAME_API_TOKEN')");
 
         ApiClient apiClient = Configuration.getDefaultApiClient();
         apiClient.setServerIndex(null);
@@ -99,7 +93,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         CommandServiceImpl commandService = new CommandServiceImpl(new CommandManager(this), serviceManager);
         GamePlayerServiceImpl gamePlayerService = new GamePlayerServiceImpl(serviceManager);
         LootModifierServiceImpl lootModifierService = new LootModifierServiceImpl(serviceManager);
-        MessageServiceImpl messageService = new MessageServiceImpl(this, serviceManager);
+        MessageServiceImpl messageService = new MessageServiceImpl(serviceManager);
         ModerationServiceImpl moderationService = new ModerationServiceImpl(playerSanctionAPI, playerAPI, serviceManager);
         PlayerAccountServiceImpl playerService = new PlayerAccountServiceImpl(playerAPI, serviceManager);
         ProxyMessagingServiceImpl proxyMessagingService = new ProxyMessagingServiceImpl(this);
