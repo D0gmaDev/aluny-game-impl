@@ -8,6 +8,9 @@ import fr.aluny.gameimpl.moderation.VanishServiceImpl;
 import fr.aluny.gameimpl.player.rank.RankServiceImpl;
 import fr.aluny.gameimpl.scoreboard.ScoreboardServiceImpl;
 import fr.aluny.gameimpl.scoreboard.team.ScoreboardTeamServiceImpl;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -41,7 +44,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPreJoin(AsyncPlayerPreLoginEvent event) {
         if (playerAccountService.getPlayerAccount(event.getUniqueId()).isEmpty()) {
-            event.disallow(Result.KICK_OTHER, "§4Cannot load player data");
+            event.disallow(Result.KICK_OTHER, Component.text("Cannot load player data", NamedTextColor.DARK_RED));
         }
     }
 
@@ -55,9 +58,9 @@ public class PlayerListener implements Listener {
 
             GamePlayer gamePlayer = gamePlayerService.onPlayerJoin(player, playerAccount);
 
-            event.setJoinMessage(null);
+            event.joinMessage(null);
 
-            player.setPlayerListHeader(" \n§3§lALUNY\n ");
+            player.sendPlayerListHeader(Component.text(" \nALUNY\n ", NamedTextColor.DARK_AQUA).decorate(TextDecoration.BOLD));
 
             vanishService.onPlayerJoin(player);
 
@@ -65,13 +68,13 @@ public class PlayerListener implements Listener {
 
             plugin.getServer().getPluginManager().callEvent(new GamePlayerJoinEvent(player, gamePlayer, playerAccount));
 
-        }, () -> player.kickPlayer("§cCannot load player data"));
+        }, () -> player.kick(Component.text("Cannot load player data", NamedTextColor.RED)));
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onQuit(PlayerQuitEvent event) {
 
-        event.setQuitMessage(null);
+        event.quitMessage(null);
 
         GamePlayer gamePlayer = gamePlayerService.getPlayer(event.getPlayer());
 

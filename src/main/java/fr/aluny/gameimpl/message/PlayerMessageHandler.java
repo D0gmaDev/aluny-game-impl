@@ -49,7 +49,7 @@ public class PlayerMessageHandler implements MessageHandler {
     @Override
     public void sendComponentMessage(String key, TagResolver... arguments) {
         Component component = MessageServiceImpl.getComponentParser().deserialize(locale.translate(key), arguments);
-        MessageServiceImpl.getAudiences().player(player).sendMessage(component);
+        player.sendMessage(component);
     }
 
     @Override
@@ -61,13 +61,13 @@ public class PlayerMessageHandler implements MessageHandler {
 
         Times times = Times.times(Duration.ofSeconds(fadeIn), Duration.ofSeconds(duration), Duration.ofSeconds(fadeOut));
 
-        MessageServiceImpl.getAudiences().player(player).showTitle(Title.title(title, message, times));
+        player.showTitle(Title.title(title, message, times));
     }
 
     @Override
     public void sendActionBar(String key, TagResolver... arguments) {
         Component component = MessageServiceImpl.getComponentParser().deserialize(locale.translate(key), arguments);
-        MessageServiceImpl.getAudiences().player(player).sendActionBar(component);
+        player.sendActionBar(component);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class PlayerMessageHandler implements MessageHandler {
         Component component = arguments != null ? MessageServiceImpl.getComponentParser().deserialize(locale.translate(titleKey), arguments) : MessageServiceImpl.getComponentParser().deserialize(locale.translate(titleKey));
 
         BossBar bossBar = BossBar.bossBar(component, 1f, color, overlay);
-        MessageServiceImpl.getAudiences().player(player).showBossBar(bossBar);
+        player.showBossBar(bossBar);
 
         if (duration != null && !duration.isZero() && !duration.isNegative()) {
 
@@ -85,7 +85,7 @@ public class PlayerMessageHandler implements MessageHandler {
 
                 if (bossBar.progress() <= 0.025f) {
                     bukkitTask.cancel();
-                    MessageServiceImpl.getAudiences().player(player).hideBossBar(bossBar);
+                    player.hideBossBar(bossBar);
                 }
 
             }, 0, duration.toSeconds());

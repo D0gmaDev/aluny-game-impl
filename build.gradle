@@ -14,9 +14,6 @@ version '0.4-SNAPSHOT'
 
 repositories {
     mavenLocal()
-    maven {
-        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
-    }
 
     maven {
         url = 'https://oss.sonatype.org/content/groups/public/'
@@ -34,6 +31,10 @@ repositories {
         url = 'https://oss.sonatype.org/content/repositories/snapshots/'
     }
 
+    maven {
+        url = "https://repo.papermc.io/repository/maven-public/"
+    }
+
     mavenCentral()
 }
 
@@ -43,14 +44,10 @@ dependencies {
     implementation "xyz.xenondevs.invui:invui:1.9"
     implementation "fr.aluny.alunyapi:alunyapi-client:0.0.4"
 
-    implementation "net.kyori:adventure-platform-bukkit:4.3.0"
-    implementation "net.kyori:adventure-text-minimessage:4.13.1"
-
     implementation 'me.catcoder:bukkit-sidebar:6.2.0-SNAPSHOT'
 
-    compileOnly 'org.spigotmc:spigot:1.19-R0.1-SNAPSHOT'
+    compileOnly "io.papermc.paper:paper-api:1.19.4-R0.1-SNAPSHOT"
     implementation 'io.projectreactor:reactor-core:3.4.24'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.0'
-    testImplementation 'org.spigotmc:spigot:1.19-R0.1-SNAPSHOT'
 }
