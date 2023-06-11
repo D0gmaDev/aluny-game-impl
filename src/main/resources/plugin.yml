@@ -1,7 +1,7 @@
 name: Game
 author: D0gma_
 contributors: [ tgi74 ]
-version: 0.4
+version: 0.5
 api-version: 1.19
 main: fr.aluny.gameimpl.GameImpl
 description: The main plugin of Aluny

@@ -10,7 +10,7 @@ compileJava.options.encoding = 'UTF-8'
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 
 group 'fr.aluny'
-version '0.4-SNAPSHOT'
+version '0.5-SNAPSHOT'
 
 repositories {
     mavenLocal()
@@ -42,7 +42,7 @@ dependencies {
     implementation group: "fr.aluny", name: "game-api", version: "develop-SNAPSHOT", changing: true
 
     implementation "xyz.xenondevs.invui:invui:1.9"
-    implementation "fr.aluny.alunyapi:alunyapi-client:0.0.4"
+    implementation "fr.aluny.alunyapi:alunyapi-client:0.0.5"
 
     implementation 'me.catcoder:bukkit-sidebar:6.2.0-SNAPSHOT'
 
