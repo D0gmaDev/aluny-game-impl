@@ -3,9 +3,9 @@ package fr.aluny.gameimpl.moderation;
 import fr.aluny.gameapi.moderation.VanishService;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.GamePlayerService;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,7 +19,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class VanishServiceImpl implements VanishService, Listener {
 
-    private final Set<GamePlayer>   vanishPlayers = new HashSet<>();
+    private final List<GamePlayer>  vanishPlayers = new ArrayList<>();
     private final JavaPlugin        plugin;
     private final GamePlayerService gamePlayerService;
 
@@ -29,13 +29,13 @@ public class VanishServiceImpl implements VanishService, Listener {
     }
 
     @Override
-    public Set<GamePlayer> getVanishedPlayers() {
-        return Collections.unmodifiableSet(this.vanishPlayers);
+    public List<GamePlayer> getVanishedPlayers() {
+        return Collections.unmodifiableList(this.vanishPlayers);
     }
 
     @Override
     public boolean isVanished(GamePlayer gamePlayer) {
-        return this.vanishPlayers.contains(gamePlayer);
+        return gamePlayer.isVanished();
     }
 
     private boolean isVanished(Player player) {
@@ -45,17 +45,19 @@ public class VanishServiceImpl implements VanishService, Listener {
     @Override
     public void vanishPlayer(GamePlayer gamePlayer) {
         this.vanishPlayers.add(gamePlayer);
+        gamePlayer.setVanished(true);
 
         Bukkit.getOnlinePlayers().stream().filter(other -> !isVanished(other)).forEach(other -> other.hidePlayer(plugin, gamePlayer.getPlayer()));
-        getVanishedPlayers().forEach(vanished -> gamePlayer.getPlayer().showPlayer(plugin, vanished.getPlayer()));
+        this.vanishPlayers.forEach(vanished -> gamePlayer.getPlayer().showPlayer(plugin, vanished.getPlayer()));
     }
 
     @Override
     public void unVanishPlayer(GamePlayer gamePlayer) {
         this.vanishPlayers.remove(gamePlayer);
+        gamePlayer.setVanished(false);
 
         Bukkit.getOnlinePlayers().forEach(other -> other.showPlayer(plugin, gamePlayer.getPlayer()));
-        getVanishedPlayers().forEach(vanished -> gamePlayer.getPlayer().hidePlayer(plugin, vanished.getPlayer()));
+        this.vanishPlayers.forEach(vanished -> gamePlayer.getPlayer().hidePlayer(plugin, vanished.getPlayer()));
     }
 
     @Override
@@ -63,8 +65,15 @@ public class VanishServiceImpl implements VanishService, Listener {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    public void onPlayerJoin(Player player) {
-        getVanishedPlayers().forEach(vanished -> player.hidePlayer(plugin, vanished.getPlayer()));
+    public void onPlayerJoin(GamePlayer gamePlayer, boolean vanish) {
+        if (vanish)
+            vanishPlayer(gamePlayer);
+        else
+            this.vanishPlayers.forEach(vanished -> gamePlayer.getPlayer().hidePlayer(plugin, vanished.getPlayer()));
+    }
+
+    public void onPlayerQuit(GamePlayer gamePlayer) {
+        this.vanishPlayers.remove(gamePlayer);
     }
 
     @EventHandler(priority = EventPriority.LOW)

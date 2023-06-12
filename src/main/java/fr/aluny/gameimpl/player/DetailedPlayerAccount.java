@@ -12,11 +12,13 @@ public class DetailedPlayerAccount extends PlayerAccountImpl {
 
     private final List<PlayerSanction> currentSanctions;
     private final boolean              allowsPrivateMessages;
+    private final boolean              vanished;
 
-    public DetailedPlayerAccount(UUID uuid, String name, Integer currentServerId, Locale locale, Set<Rank> ranks, OffsetDateTime creationDate, List<PlayerSanction> currentSanctions, boolean allowsPrivateMessages) {
+    public DetailedPlayerAccount(UUID uuid, String name, Integer currentServerId, Locale locale, Set<Rank> ranks, OffsetDateTime creationDate, List<PlayerSanction> currentSanctions, boolean allowsPrivateMessages, boolean vanished) {
         super(uuid, name, currentServerId, locale, ranks, creationDate);
         this.currentSanctions = currentSanctions;
         this.allowsPrivateMessages = allowsPrivateMessages;
+        this.vanished = vanished;
     }
 
     public List<PlayerSanction> getCurrentSanctions() {
@@ -25,6 +27,10 @@ public class DetailedPlayerAccount extends PlayerAccountImpl {
 
     public boolean doesAllowPrivateMessages() {
         return this.allowsPrivateMessages;
+    }
+
+    public boolean shouldVanish() {
+        return this.vanished && hasPermission("fr.aluny.vanish");
     }
 
     @Override
@@ -39,6 +45,7 @@ public class DetailedPlayerAccount extends PlayerAccountImpl {
                 ", highestRank=" + getHighestRank() +
                 ", currentSanctions=" + currentSanctions.size() +
                 ", allowsPrivateMessages=" + allowsPrivateMessages +
+                ", vanished=" + vanished +
                 '}';
     }
 }

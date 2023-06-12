@@ -70,6 +70,7 @@ public class GamePlayerImpl implements GamePlayer {
         return this.vanished;
     }
 
+    @Override
     public void setVanished(boolean vanished) {
         this.vanished = vanished;
     }
