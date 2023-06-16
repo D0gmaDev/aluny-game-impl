@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scoreboard.Scoreboard;
@@ -26,7 +27,7 @@ public class ScoreboardTeamServiceImpl implements ScoreboardTeamService {
     }
 
     @Override
-    public ScoreboardTeam registerScoreboardTeam(String name, String prefix) {
+    public ScoreboardTeam registerScoreboardTeam(String name, Component prefix) {
         ScoreboardTeamImpl scoreboardTeam = new ScoreboardTeamImpl(this.scoreboard.registerNewTeam(name));
         scoreboardTeam.setPrefix(prefix);
         this.scoreboardTeams.put(name, scoreboardTeam);

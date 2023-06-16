@@ -21,6 +21,6 @@ public class ChatColorPreProcessor implements ChatPreProcessor {
         Rank highestRank = processedChat.getSender() instanceof GamePlayerImpl gamePlayer ? gamePlayer.getCachedHighestRank() : accountService.getPlayerAccount(processedChat.getSender()).getHighestRank();
 
         TextColor color = highestRank.hasPermission("fr.aluny.chat.white_message") ? NamedTextColor.WHITE : NamedTextColor.GRAY;
-        processedChat.changeMessageContent(content -> content.color(color));
+        processedChat.setMessageContent(content -> content.color(color));
     }
 }

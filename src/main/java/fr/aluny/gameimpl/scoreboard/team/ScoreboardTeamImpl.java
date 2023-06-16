@@ -2,9 +2,13 @@ package fr.aluny.gameimpl.scoreboard.team;
 
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.scoreboard.Team;
 
 public class ScoreboardTeamImpl implements ScoreboardTeam {
@@ -23,38 +27,38 @@ public class ScoreboardTeamImpl implements ScoreboardTeam {
     }
 
     @Override
-    public String getPrefix() {
-        return this.team.getPrefix();
+    public Component getPrefix() {
+        return this.team.prefix();
     }
 
     @Override
-    public void setPrefix(String prefix) {
-        this.team.setPrefix(prefix);
+    public void setPrefix(Component prefix) {
+        this.team.prefix(prefix);
     }
 
     @Override
-    public String getSuffix() {
-        return this.team.getSuffix();
+    public Component getSuffix() {
+        return this.team.suffix();
     }
 
     @Override
-    public void setSuffix(String suffix) {
-        this.team.setSuffix(suffix);
+    public void setSuffix(Component suffix) {
+        this.team.suffix(suffix);
     }
 
     @Override
-    public ChatColor getColor() {
-        return this.team.getColor();
+    public Optional<TextColor> getColor() {
+        return this.team.hasColor() ? Optional.of(this.team.color()) : Optional.empty();
     }
 
     @Override
-    public void setColor(ChatColor color) {
-        this.team.setColor(color);
+    public void setColor(NamedTextColor color) {
+        this.team.color(color);
     }
 
     @Override
     public Set<GamePlayer> getPlayers() {
-        return this.players;
+        return Collections.unmodifiableSet(this.players);
     }
 
     @Override
@@ -65,9 +69,9 @@ public class ScoreboardTeamImpl implements ScoreboardTeam {
     @Override
     public void addPlayer(GamePlayer player) {
         this.players.add(player);
-        this.team.addEntry(player.getPlayerName());
+        this.team.addEntity(player.getPlayer());
 
-        player.getPlayer().setPlayerListName(getPrefix() + player.getPlayerName() + getSuffix());
+        player.getPlayer().playerListName(getPrefix().append(Component.text(player.getPlayerName())).append(getSuffix()));
 
         player.setScoreboardTeam(this);
     }
@@ -75,9 +79,9 @@ public class ScoreboardTeamImpl implements ScoreboardTeam {
     @Override
     public boolean removePlayer(GamePlayer player) {
         this.players.remove(player);
-        boolean removed = this.team.removeEntry(player.getPlayerName());
+        boolean removed = this.team.removeEntity(player.getPlayer());
 
-        player.getPlayer().setPlayerListName(null);
+        player.getPlayer().playerListName(null);
 
         player.setScoreboardTeam(null);
         return removed;
@@ -91,7 +95,7 @@ public class ScoreboardTeamImpl implements ScoreboardTeam {
 
     @Override
     public boolean hasPlayer(GamePlayer player) {
-        return this.team.hasEntry(player.getPlayerName());
+        return this.team.hasEntity(player.getPlayer());
     }
 
     @Override

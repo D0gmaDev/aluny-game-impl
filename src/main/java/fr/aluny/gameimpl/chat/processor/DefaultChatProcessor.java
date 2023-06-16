@@ -37,7 +37,7 @@ public class DefaultChatProcessor implements ChatProcessor {
         Bukkit.getOnlinePlayers().forEach(player -> player.sendMessage(MessageService.COMPONENT_PARSER.deserialize(this.chatFormat,
                 Placeholder.component("prefix", prefix),
                 Placeholder.component("name", name),
-                Placeholder.component("message", processedChat.getContentForPlayer(player.getUniqueId()))
+                Placeholder.component("message", processedChat.getMessageContentForPlayer(player.getUniqueId()))
         )));
 
         Bukkit.getLogger().info("[CHAT] " + processedChat.getSender().getPlayerName() + ": " + processedChat.getMessageContent().content());

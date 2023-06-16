@@ -54,15 +54,15 @@ public class PlayerListener implements Listener {
 
         scoreboardTeamService.onPlayerJoin(player);
 
-        playerAccountService.getPlayerAccount(player.getUniqueId()).ifPresentOrElse(playerAccount -> {
+        playerAccountService.getDetailedPlayerAccount(player.getUniqueId()).ifPresentOrElse(playerAccount -> {
 
             GamePlayer gamePlayer = gamePlayerService.onPlayerJoin(player, playerAccount);
 
             event.joinMessage(null);
 
-            player.sendPlayerListHeader(Component.text(" \nALUNY\n ", NamedTextColor.DARK_AQUA).decorate(TextDecoration.BOLD));
+            player.sendPlayerListHeader(Component.text(" \nALUNY\n ", NamedTextColor.DARK_AQUA, TextDecoration.BOLD));
 
-            vanishService.onPlayerJoin(player);
+            vanishService.onPlayerJoin(gamePlayer, playerAccount.shouldVanish());
 
             rankService.onPlayerJoin(gamePlayer, playerAccount);
 
@@ -80,6 +80,8 @@ public class PlayerListener implements Listener {
 
         GamePlayerQuitEvent gamePlayerQuitEvent = new GamePlayerQuitEvent(event.getPlayer(), gamePlayer);
         plugin.getServer().getPluginManager().callEvent(gamePlayerQuitEvent);
+
+        vanishService.onPlayerQuit(gamePlayer);
 
         gamePlayerService.onPlayerQuit(event.getPlayer(), gamePlayerQuitEvent.isSaved());
 
