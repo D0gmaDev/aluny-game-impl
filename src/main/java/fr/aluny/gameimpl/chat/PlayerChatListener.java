@@ -1,12 +1,13 @@
 package fr.aluny.gameimpl.chat;
 
 import fr.aluny.gameimpl.player.GamePlayerServiceImpl;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import java.util.Set;
 import java.util.regex.Pattern;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 public class PlayerChatListener implements Listener {
@@ -23,15 +24,16 @@ public class PlayerChatListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onChat(AsyncPlayerChatEvent event) {
-        if (event.isCancelled())
+    public void onChat(AsyncChatEvent event) {
+        if (event.isCancelled() || !(event.message() instanceof TextComponent message))
             return;
+
         event.setCancelled(true);
 
-        if (chatService.executeChatListener(event.getPlayer().getUniqueId(), event.getMessage()))
+        if (chatService.executeChatListener(event.getPlayer().getUniqueId(), message.content()))
             return;
 
-        chatService.acceptProcess(event);
+        chatService.acceptProcess(event.getPlayer(), message);
     }
 
     private boolean isBlocked(String message) {

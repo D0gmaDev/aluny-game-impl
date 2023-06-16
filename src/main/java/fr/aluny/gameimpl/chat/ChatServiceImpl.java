@@ -14,7 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import net.kyori.adventure.text.TextComponent;
+import org.bukkit.entity.Player;
 
 public class ChatServiceImpl implements ChatService {
 
@@ -121,22 +122,19 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
-    public void acceptProcess(AsyncPlayerChatEvent event) {
-        char prefix = event.getMessage().charAt(0);
-
-        String message;
+    public void acceptProcess(Player player, TextComponent message) {
+        char prefix = message.content().charAt(0);
 
         if (this.chatPreProcessors.containsKey(prefix) || this.chatProcessors.containsKey(prefix)) {
-            message = event.getMessage().substring(1);
+            message = message.content(message.content().substring(1));
 
-            if (message.isEmpty())
+            if (message.content().isBlank())
                 return;
         } else {
-            message = event.getMessage();
             prefix = DEFAULT_PREFIX;
         }
 
-        ProcessedChat processedChat = new ProcessedChat(serviceManager.getGamePlayerService().getPlayer(event.getPlayer()), message);
+        ProcessedChat processedChat = new ProcessedChat(serviceManager.getGamePlayerService().getPlayer(player), message);
 
         acceptPreProcess(prefix, processedChat);
 

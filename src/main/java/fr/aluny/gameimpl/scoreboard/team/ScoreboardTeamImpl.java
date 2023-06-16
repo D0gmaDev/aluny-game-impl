@@ -2,6 +2,7 @@ package fr.aluny.gameimpl.scoreboard.team;
 
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -57,7 +58,7 @@ public class ScoreboardTeamImpl implements ScoreboardTeam {
 
     @Override
     public Set<GamePlayer> getPlayers() {
-        return this.players;
+        return Collections.unmodifiableSet(this.players);
     }
 
     @Override
@@ -94,7 +95,7 @@ public class ScoreboardTeamImpl implements ScoreboardTeam {
 
     @Override
     public boolean hasPlayer(GamePlayer player) {
-        return this.team.hasEntry(player.getPlayerName());
+        return this.team.hasEntity(player.getPlayer());
     }
 
     @Override
