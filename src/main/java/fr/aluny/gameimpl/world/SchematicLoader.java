@@ -33,6 +33,8 @@ public class SchematicLoader {
     public SchematicImpl load(InputStream inputStream) throws IOException {
         NBTCompound schematicData = NBTReader.read(inputStream);
 
+        int version = schematicData.getInt("Version", -1);
+
         short width = schematicData.getShort("Width", (short) 0);
         short height = schematicData.getShort("Height", (short) 0);
         short length = schematicData.getShort("Length", (short) 0);
@@ -61,14 +63,15 @@ public class SchematicLoader {
         }
 
         NBTList entitiesList = schematicData.getList("Entities");
+        int entitiesSize = entitiesList != null ? entitiesList.size() : 0;
 
-        SchematicEntityData[] entities = new SchematicEntityData[entitiesList.size()];
-        for (int i = 0; i < entitiesList.size(); i++)
+        SchematicEntityData[] entities = new SchematicEntityData[entitiesSize];
+        for (int i = 0; i < entitiesSize; i++)
             entities[i] = parseEntity(length, height, width, entitiesList.getCompound(i));
 
         inputStream.close();
 
-        return new SchematicImpl(height, width, length, entities, blocksData, sblocks, airData);
+        return new SchematicImpl(version, height, width, length, entities, blocksData, sblocks, airData);
     }
 
     private SchematicBlockData parsePaletteData(String key) {

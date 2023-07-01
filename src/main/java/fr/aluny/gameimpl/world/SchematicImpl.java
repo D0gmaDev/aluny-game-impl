@@ -10,6 +10,8 @@ import org.bukkit.entity.Entity;
 
 public class SchematicImpl implements Schematic {
 
+    private final int version;
+
     private final short height;
     private       short width;
     private       short length;
@@ -22,7 +24,8 @@ public class SchematicImpl implements Schematic {
 
     private boolean pasteAir = false;
 
-    public SchematicImpl(short height, short width, short length, SchematicEntityData[] entitiesData, SchematicBlockData[] blocksData, short[] blocks, int airData) {
+    public SchematicImpl(int version, short height, short width, short length, SchematicEntityData[] entitiesData, SchematicBlockData[] blocksData, short[] blocks, int airData) {
+        this.version = version;
         this.height = height;
         this.width = width;
         this.length = length;
@@ -30,6 +33,11 @@ public class SchematicImpl implements Schematic {
         this.blocksData = blocksData;
         this.blocks = blocks;
         this.airData = airData;
+    }
+
+    @Override
+    public int getVersion() {
+        return this.version;
     }
 
     @Override
