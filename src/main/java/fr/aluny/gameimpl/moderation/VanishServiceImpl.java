@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,6 +17,8 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 public class VanishServiceImpl implements VanishService, Listener {
 
@@ -49,6 +52,8 @@ public class VanishServiceImpl implements VanishService, Listener {
 
         Bukkit.getOnlinePlayers().stream().filter(other -> !isVanished(other)).forEach(other -> other.hidePlayer(plugin, gamePlayer.getPlayer()));
         this.vanishPlayers.forEach(vanished -> gamePlayer.getPlayer().showPlayer(plugin, vanished.getPlayer()));
+
+        setupVanishedPlayer(gamePlayer);
     }
 
     @Override
@@ -98,6 +103,12 @@ public class VanishServiceImpl implements VanishService, Listener {
     public void onDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player && isVanished(player))
             event.setCancelled(true);
+    }
+
+    private void setupVanishedPlayer(GamePlayer gamePlayer) {
+        gamePlayer.setGameMode(GameMode.SPECTATOR);
+        gamePlayer.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 999999, 1, false, false));
+        gamePlayer.clearInventory();
     }
 
 }
