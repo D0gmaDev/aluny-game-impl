@@ -35,10 +35,12 @@ import fr.aluny.gameimpl.version.VersionMatcherImpl;
 import fr.aluny.gameimpl.world.LootModifierListener;
 import fr.aluny.gameimpl.world.LootModifierServiceImpl;
 import fr.aluny.gameimpl.world.SchematicServiceImpl;
+import fr.aluny.gameimpl.world.VoidGenerator;
 import fr.aluny.gameimpl.world.anchor.AnchorServiceImpl;
 import java.util.Optional;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
+import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import xyz.xenondevs.invui.InvUI;
@@ -134,7 +136,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
 
         pluginManager.registerEvents(new PlayerChatListener(chatService, gamePlayerService), this);
         pluginManager.registerEvents(new LootModifierListener(this, lootModifierService), this);
-        pluginManager.registerEvents(new PlayerListener(this, serviceManager), this);
+        pluginManager.registerEvents(new PlayerListener(serviceManager), this);
 
         /* Commands registration */
         commandService.registerRuntimeCommand(new PrivateMessageCommand(serviceManager));
@@ -159,6 +161,11 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         /* Services shutdown */
         if (isEnabled())
             serviceManager.shutdownServices();
+    }
+
+    @Override
+    public ChunkGenerator getDefaultWorldGenerator(String worldName, String id) {
+        return new VoidGenerator();
     }
 
     @Override

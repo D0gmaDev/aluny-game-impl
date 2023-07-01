@@ -19,11 +19,9 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class PlayerListener implements Listener {
 
-    private final JavaPlugin                plugin;
     private final GamePlayerServiceImpl     gamePlayerService;
     private final ScoreboardTeamServiceImpl scoreboardTeamService;
     private final ScoreboardServiceImpl     scoreboardService;
@@ -31,8 +29,7 @@ public class PlayerListener implements Listener {
     private final PlayerAccountServiceImpl  playerAccountService;
     private final RankServiceImpl           rankService;
 
-    public PlayerListener(JavaPlugin plugin, ServiceManager serviceManager) {
-        this.plugin = plugin;
+    public PlayerListener(ServiceManager serviceManager) {
         this.gamePlayerService = (GamePlayerServiceImpl) serviceManager.getGamePlayerService();
         this.scoreboardTeamService = (ScoreboardTeamServiceImpl) serviceManager.getScoreboardTeamService();
         this.scoreboardService = (ScoreboardServiceImpl) serviceManager.getScoreboardService();
@@ -52,13 +49,13 @@ public class PlayerListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
 
+        event.joinMessage(null);
+
         scoreboardTeamService.onPlayerJoin(player);
 
         playerAccountService.getDetailedPlayerAccount(player.getUniqueId()).ifPresentOrElse(playerAccount -> {
 
             GamePlayer gamePlayer = gamePlayerService.onPlayerJoin(player, playerAccount);
-
-            event.joinMessage(null);
 
             player.sendPlayerListHeader(Component.text(" \nALUNY\n ", NamedTextColor.DARK_AQUA, TextDecoration.BOLD));
 
@@ -66,7 +63,7 @@ public class PlayerListener implements Listener {
 
             rankService.onPlayerJoin(gamePlayer, playerAccount);
 
-            plugin.getServer().getPluginManager().callEvent(new GamePlayerJoinEvent(player, gamePlayer, playerAccount));
+            new GamePlayerJoinEvent(player, gamePlayer, playerAccount, playerAccount.shouldVanish()).callEvent();
 
         }, () -> player.kick(Component.text("Cannot load player data", NamedTextColor.RED)));
     }
@@ -78,8 +75,8 @@ public class PlayerListener implements Listener {
 
         GamePlayer gamePlayer = gamePlayerService.getPlayer(event.getPlayer());
 
-        GamePlayerQuitEvent gamePlayerQuitEvent = new GamePlayerQuitEvent(event.getPlayer(), gamePlayer);
-        plugin.getServer().getPluginManager().callEvent(gamePlayerQuitEvent);
+        GamePlayerQuitEvent gamePlayerQuitEvent = new GamePlayerQuitEvent(event.getPlayer(), gamePlayer, gamePlayer.isVanished());
+        gamePlayerQuitEvent.callEvent();
 
         vanishService.onPlayerQuit(gamePlayer);
 
