@@ -40,8 +40,13 @@ public class SetMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int duration, int fadeOut) {
-        fetchReceivers().forEach(messageHandler -> messageHandler.sendTitle(titleKey, titleArgs, messageKey, messageArgs, fadeIn, duration, fadeOut));
+    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, Duration fadeIn, Duration stay, Duration fadeOut) {
+        fetchReceivers().forEach(messageHandler -> messageHandler.sendTitle(titleKey, titleArgs, messageKey, messageArgs, fadeIn, stay, fadeOut));
+    }
+
+    @Override
+    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int stay, int fadeOut) {
+        fetchReceivers().forEach(messageHandler -> messageHandler.sendTitle(titleKey, titleArgs, messageKey, messageArgs, fadeIn, stay, fadeOut));
     }
 
     @Override

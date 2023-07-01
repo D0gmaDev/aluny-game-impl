@@ -3,7 +3,6 @@ package fr.aluny.gameimpl.translation;
 import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameapi.translation.TranslationService;
-import fr.aluny.gameapi.utils.ChatUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,8 +36,7 @@ public class TranslationServiceImpl implements TranslationService {
             throw new RuntimeException(e);
         }
 
-        Map<String, String> translations = properties.entrySet().stream()
-                .collect(Collectors.toMap(entry -> entry.getKey().toString(), entry -> ChatUtils.colorize(entry.getValue().toString())));
+        Map<String, String> translations = properties.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().toString(), entry -> entry.getValue().toString()));
 
         LocaleImpl locale = this.locales.get(code);
 

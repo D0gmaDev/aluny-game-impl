@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -127,6 +128,16 @@ public class GamePlayerImpl implements GamePlayer {
     }
 
     @Override
+    public GameMode getGameMode() {
+        return this.player.getGameMode();
+    }
+
+    @Override
+    public void setGameMode(GameMode gameMode) {
+        this.player.setGameMode(gameMode);
+    }
+
+    @Override
     public PlayerInventory getInventory() {
         return this.player.getInventory();
     }
@@ -199,6 +210,11 @@ public class GamePlayerImpl implements GamePlayer {
     @Override
     public boolean isAllowFlight() {
         return this.player.getAllowFlight();
+    }
+
+    @Override
+    public void setAllowFlight(boolean allowFlight) {
+        this.player.setAllowFlight(allowFlight);
     }
 
     @Override

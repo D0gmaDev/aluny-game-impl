@@ -18,7 +18,12 @@ public class DummyMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int duration, int fadeOut) {
+    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, Duration fadeIn, Duration stay, Duration fadeOut) {
+
+    }
+
+    @Override
+    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int stay, int fadeOut) {
 
     }
 

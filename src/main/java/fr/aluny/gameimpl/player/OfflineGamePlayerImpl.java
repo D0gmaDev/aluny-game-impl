@@ -6,6 +6,7 @@ import fr.aluny.gameimpl.message.DummyMessageHandler;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.UUID;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
@@ -24,6 +25,7 @@ public class OfflineGamePlayerImpl implements OfflineGamePlayer {
 
     private Location                 location;
     private Collection<PotionEffect> activePotionsEffects;
+    private GameMode                 gameMode;
     private PlayerInventory          inventory;
     private int                      level;
     private float                    experience;
@@ -40,6 +42,7 @@ public class OfflineGamePlayerImpl implements OfflineGamePlayer {
 
         this.location = player.getLocation();
         this.activePotionsEffects = player.getActivePotionEffects();
+        this.gameMode = player.getGameMode();
         this.inventory = player.getInventory();
         this.level = player.getLevel();
         this.experience = player.getExp();
@@ -55,6 +58,7 @@ public class OfflineGamePlayerImpl implements OfflineGamePlayer {
         player.teleport(this.location);
         player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
         player.addPotionEffects(this.activePotionsEffects);
+        player.setGameMode(this.gameMode);
 
         PlayerInventory playerInventory = player.getInventory();
         playerInventory.clear();
@@ -121,6 +125,16 @@ public class OfflineGamePlayerImpl implements OfflineGamePlayer {
     @Override
     public void removePotionEffect(PotionEffectType potionEffectType) {
         this.activePotionsEffects.removeIf(potionEffect -> potionEffect.getType() == potionEffectType);
+    }
+
+    @Override
+    public GameMode getGameMode() {
+        return this.gameMode;
+    }
+
+    @Override
+    public void setGameMode(GameMode gameMode) {
+        this.gameMode = gameMode;
     }
 
     @Override
@@ -196,6 +210,11 @@ public class OfflineGamePlayerImpl implements OfflineGamePlayer {
     @Override
     public boolean isAllowFlight() {
         return this.allowFlight;
+    }
+
+    @Override
+    public void setAllowFlight(boolean allowFlight) {
+        this.allowFlight = allowFlight;
     }
 
     @Override

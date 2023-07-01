@@ -18,6 +18,8 @@ import org.bukkit.entity.Player;
 
 public class PlayerMessageHandler implements MessageHandler {
 
+    private static final MiniMessage COMPONENT_PARSER = MessageServiceImpl.getComponentParser();
+
     private final Player player;
     private final Locale locale;
 
@@ -53,26 +55,30 @@ public class PlayerMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int duration, int fadeOut) {
-        MiniMessage componentParser = MessageServiceImpl.getComponentParser();
+    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, Duration fadeIn, Duration stay, Duration fadeOut) {
 
-        Component title = titleKey != null ? (titleArgs != null ? componentParser.deserialize(locale.translate(titleKey), titleArgs) : componentParser.deserialize(locale.translate(titleKey))) : Component.empty();
-        Component message = messageKey != null ? (messageArgs != null ? componentParser.deserialize(locale.translate(messageKey), messageArgs) : componentParser.deserialize(locale.translate(messageKey))) : Component.empty();
+        Component title = titleKey != null ? (titleArgs != null ? COMPONENT_PARSER.deserialize(locale.translate(titleKey), titleArgs) : COMPONENT_PARSER.deserialize(locale.translate(titleKey))) : Component.empty();
+        Component message = messageKey != null ? (messageArgs != null ? COMPONENT_PARSER.deserialize(locale.translate(messageKey), messageArgs) : COMPONENT_PARSER.deserialize(locale.translate(messageKey))) : Component.empty();
 
-        Times times = Times.times(Duration.ofSeconds(fadeIn), Duration.ofSeconds(duration), Duration.ofSeconds(fadeOut));
+        Times times = Times.times(fadeIn, stay, fadeOut);
 
         player.showTitle(Title.title(title, message, times));
     }
 
     @Override
+    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int stay, int fadeOut) {
+        sendTitle(titleKey, titleArgs, messageKey, messageArgs, Duration.ofSeconds(fadeIn), Duration.ofSeconds(stay), Duration.ofSeconds(fadeIn));
+    }
+
+    @Override
     public void sendActionBar(String key, TagResolver... arguments) {
-        Component component = MessageServiceImpl.getComponentParser().deserialize(locale.translate(key), arguments);
+        Component component = COMPONENT_PARSER.deserialize(locale.translate(key), arguments);
         player.sendActionBar(component);
     }
 
     @Override
     public void showBossBar(String titleKey, TagResolver arguments, Color color, Overlay overlay, Duration duration) {
-        Component component = arguments != null ? MessageServiceImpl.getComponentParser().deserialize(locale.translate(titleKey), arguments) : MessageServiceImpl.getComponentParser().deserialize(locale.translate(titleKey));
+        Component component = arguments != null ? COMPONENT_PARSER.deserialize(locale.translate(titleKey), arguments) : COMPONENT_PARSER.deserialize(locale.translate(titleKey));
 
         BossBar bossBar = BossBar.bossBar(component, 1f, color, overlay);
         player.showBossBar(bossBar);
