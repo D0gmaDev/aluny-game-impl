@@ -1,5 +1,7 @@
 package fr.aluny.gameimpl.player.command;
 
+import static fr.aluny.gameapi.utils.ComponentUtils.name;
+
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
@@ -43,7 +45,7 @@ public class PrivateMessageCommand extends Command {
         PlayerAccount senderAccount = serviceManager.getPlayerAccountService().getPlayerAccount(player);
 
         if (serviceManager.getModerationService().isMuted(player.getUuid())) {
-            player.getMessageHandler().sendComponentMessage("moderation_cancelled_muted", Formatter.date("date", serviceManager.getModerationService().getUnMuteDate(player.getUuid())));
+            player.getMessageHandler().sendMessage("moderation_cancelled_muted", Formatter.date("date", serviceManager.getModerationService().getUnMuteDate(player.getUuid())));
             return;
         }
 
@@ -57,7 +59,7 @@ public class PrivateMessageCommand extends Command {
             Optional<PlayerAccount> playerAccountByName = serviceManager.getPlayerAccountService().getPlayerAccountByName(receiverName);
 
             if (playerAccountByName.isEmpty() || !playerAccountByName.get().isOnline()) {
-                player.getMessageHandler().sendComponentMessage("private_message_offline", Placeholder.unparsed("name", receiverName));
+                player.getMessageHandler().sendMessage("private_message_offline", name(receiverName));
                 return;
             }
 
@@ -72,7 +74,7 @@ public class PrivateMessageCommand extends Command {
         DetailedPlayerAccount receiverAccount = ((PlayerAccountServiceImpl) serviceManager.getPlayerAccountService()).getDetailedPlayerAccount(receiverUuid).orElseThrow();
 
         if (!receiverAccount.doesAllowPrivateMessages() && !senderAccount.hasPermission(BYPASS_PERMISSION)) {
-            player.getMessageHandler().sendComponentMessage("private_message_disallow", Placeholder.unparsed("name", receiverAccount.getName()));
+            player.getMessageHandler().sendMessage("private_message_disallow", name(receiverAccount));
             return;
         }
 

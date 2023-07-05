@@ -8,12 +8,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 public class DummyMessageHandler implements MessageHandler {
 
     @Override
-    public void sendMessage(String key, String... arguments) {
-
-    }
-
-    @Override
-    public void sendComponentMessage(String key, TagResolver... arguments) {
+    public void sendMessage(String key, TagResolver... arguments) {
 
     }
 

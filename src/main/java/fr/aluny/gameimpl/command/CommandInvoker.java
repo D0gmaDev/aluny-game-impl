@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.function.Function;
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -63,7 +64,7 @@ class CommandInvoker {
                 try {
                     arguments.add(commandInvoker.parser.apply(args[i - 1]));
                 } catch (IllegalArgumentException e) {
-                    player.getMessageHandler().sendMessage(commandInvoker.errorMessage, args[i - 1]);
+                    player.getMessageHandler().sendMessage(commandInvoker.errorMessage, Placeholder.unparsed("arg", args[i - 1]));
                     return;
                 }
             }

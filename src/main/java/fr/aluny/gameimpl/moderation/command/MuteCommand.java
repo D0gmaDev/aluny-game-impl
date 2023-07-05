@@ -1,5 +1,9 @@
 package fr.aluny.gameimpl.moderation.command;
 
+import static fr.aluny.gameapi.utils.ComponentUtils.argument;
+import static fr.aluny.gameapi.utils.ComponentUtils.id;
+import static fr.aluny.gameapi.utils.ComponentUtils.name;
+
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
@@ -50,12 +54,12 @@ public class MuteCommand extends Command {
                 SimpleItem validationItem = new SimpleItem(new ItemBuilder(Material.LIME_CANDLE).setDisplayName(new Translation("sanction_validate")), click -> {
                     click.getPlayer().closeInventory();
                     playerSanctionAPI.applySanction(playerAccount, player, SanctionType.MUTE, duration, String.join(" ", args)).ifPresent(sanction ->
-                            player.getMessageHandler().sendComponentMessage("moderation_successfully_muted", Placeholder.unparsed("name", playerAccount.getName()), Placeholder.unparsed("id", String.valueOf(sanction.getId()))));
+                            player.getMessageHandler().sendMessage("moderation_successfully_muted", name(playerAccount), id(sanction.getId())));
 
                     serviceManager.getProxyMessagingService().sendMessage(player.getPlayer(), playerAccount.getName(), getMuteMessage(playerAccount.getLocale(), duration));
                 });
 
-                SimpleItem infoItem = new SimpleItem(new ItemBuilder(Material.PAPER).setDisplayName(new Translation("sanction_mute_player", Placeholder.unparsed("name", playerAccount.getName())))
+                SimpleItem infoItem = new SimpleItem(new ItemBuilder(Material.PAPER).setDisplayName(new Translation("sanction_mute_player", name(playerAccount)))
                         .addLoreLines(new Translation("sanction_duration", Placeholder.unparsed("duration", TimeUtils.format(duration))), new Translation("sanction_reason", Placeholder.unparsed("reason", String.join(" ", args)))));
 
                 SimpleItem cancelItem = new SimpleItem(new ItemBuilder(Material.RED_CANDLE).setDisplayName(new Translation("sanction_cancel")), click -> click.getPlayer().closeInventory());
@@ -64,9 +68,9 @@ public class MuteCommand extends Command {
 
                 Window.single().setGui(gui).setTitle(new Translation("sanction_mute_title")).open(player.getPlayer());
 
-            }, () -> player.getMessageHandler().sendMessage("command_validation_invalid_duration", durationString));
+            }, () -> player.getMessageHandler().sendMessage("command_validation_invalid_duration", argument(durationString)));
 
-        }, () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", name));
+        }, () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", argument(name)));
     }
 
     @TabCompleter

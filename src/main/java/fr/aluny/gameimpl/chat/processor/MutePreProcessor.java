@@ -17,7 +17,7 @@ public class MutePreProcessor implements ChatPreProcessor {
     public void accept(ProcessedChat chat) {
         if (moderationService.isMuted(chat.getSender().getUuid())) {
             chat.setCancelled(true);
-            chat.getSender().getMessageHandler().sendComponentMessage("moderation_cancelled_muted", Formatter.date("date", moderationService.getUnMuteDate(chat.getSender().getUuid())));
+            chat.getSender().getMessageHandler().sendMessage("moderation_cancelled_muted", Formatter.date("date", moderationService.getUnMuteDate(chat.getSender().getUuid())));
         }
     }
 }
