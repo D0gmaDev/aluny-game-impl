@@ -1,15 +1,13 @@
 package fr.aluny.gameimpl.translation;
 
+import fr.aluny.gameapi.message.MessageService;
 import fr.aluny.gameapi.translation.Locale;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 public class LocaleImpl implements Locale {
-
-    private static final Random RANDOM = new Random();
 
     private final String              code;
     private final boolean             defaultLocale;
@@ -29,33 +27,6 @@ public class LocaleImpl implements Locale {
     }
 
     @Override
-    public List<TranslationPair> getAllTranslationsStartingWith(String prefix) {
-        return this.translations.entrySet().stream()
-                .filter(entry -> entry.getKey().startsWith(prefix))
-                .map(entry -> new TranslationPair(entry.getKey(), entry.getValue()))
-                .sorted(Comparator.comparing(TranslationPair::key))
-                .toList();
-    }
-
-    @Override
-    public String getRandomTranslationsStartingWith(String prefix) {
-        List<TranslationPair> list = getAllTranslationsStartingWith(prefix);
-        if (list.isEmpty())
-            return "Missing translation [" + prefix + "]";
-
-        return list.get(RANDOM.nextInt(list.size())).value();
-    }
-
-    @Override
-    public String getRandomTranslationsStartingWith(String prefix, Object... arguments) {
-        List<TranslationPair> list = getAllTranslationsStartingWith(prefix);
-        if (list.isEmpty())
-            return "Missing translation [" + prefix + "]";
-
-        return String.format(list.get(RANDOM.nextInt(list.size())).value(), arguments);
-    }
-
-    @Override
     public String translate(String key) {
         if (this.translations.containsKey(key))
             return this.translations.get(key);
@@ -66,30 +37,28 @@ public class LocaleImpl implements Locale {
             return translationService.getDefaultLocale().translate(key);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public String translate(String key, Object... arguments) {
-        if (this.translations.containsKey(key))
-            return String.format(this.translations.get(key), arguments);
+    public Component translateComponent(String key, TagResolver... arguments) {
+        return MessageService.COMPONENT_PARSER.deserialize(translate(key), arguments);
+    }
 
-        if (this.defaultLocale)
-            return "Missing translation [" + key + "]";
-        else
-            return translationService.getDefaultLocale().translate(key, arguments);
+    @Override
+    public boolean hasTranslation(String key) {
+        return this.translations.containsKey(key);
     }
 
     @Override
     public String getCode() {
-        return code;
+        return this.code;
     }
 
     @Override
     public boolean isDefaultLocale() {
-        return defaultLocale;
+        return this.defaultLocale;
     }
 
     public Map<String, String> getTranslations() {
-        return translations;
+        return this.translations;
     }
 
     @Override

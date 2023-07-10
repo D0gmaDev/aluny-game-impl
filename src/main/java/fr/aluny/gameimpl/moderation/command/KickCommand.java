@@ -1,5 +1,8 @@
 package fr.aluny.gameimpl.moderation.command;
 
+import static fr.aluny.gameapi.utils.ComponentUtils.id;
+import static fr.aluny.gameapi.utils.ComponentUtils.name;
+
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
@@ -34,7 +37,7 @@ public class KickCommand extends Command {
         serviceManager.getPlayerAccountService().getPlayerAccountByName(name).ifPresentOrElse(playerAccount -> {
 
             if (!playerAccount.isOnline()) {
-                player.getMessageHandler().sendComponentMessage("moderation_target_offline", Placeholder.unparsed("name", playerAccount.getName()));
+                player.getMessageHandler().sendMessage("moderation_target_offline", name(playerAccount));
                 return;
             }
 
@@ -44,10 +47,10 @@ public class KickCommand extends Command {
             }
 
             playerSanctionAPI.applySanction(playerAccount, player, SanctionType.KICK, Duration.ZERO, String.join(" ", args)).ifPresent(sanction ->
-                    player.getMessageHandler().sendComponentMessage("moderation_successfully_kicked", Placeholder.unparsed("name", playerAccount.getName()), Placeholder.unparsed("id", String.valueOf(sanction.getId()))));
+                    player.getMessageHandler().sendMessage("moderation_successfully_kicked", name(playerAccount), id(sanction.getId())));
             serviceManager.getProxyMessagingService().kickFromProxy(player.getPlayer(), playerAccount.getName(), getReasonString(playerAccount.getLocale()));
 
-        }, () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", name));
+        }, () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", Placeholder.unparsed("arg", name)));
     }
 
     @TabCompleter

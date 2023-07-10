@@ -34,8 +34,7 @@ public class GamePlayerServiceImpl implements GamePlayerService {
     }
 
     public GamePlayer onPlayerJoin(Player player, PlayerAccount account) {
-        if (gamePlayerMap.containsKey(player.getUniqueId())) {
-            OfflineGamePlayerImpl offlineGamePlayer = ((OfflineGamePlayerImpl) gamePlayerMap.get(player.getUniqueId()));
+        if (gamePlayerMap.containsKey(player.getUniqueId()) && gamePlayerMap.get(player.getUniqueId()) instanceof OfflineGamePlayerImpl offlineGamePlayer) {
             offlineGamePlayer.applyDataToPlayer(player);
         }
 

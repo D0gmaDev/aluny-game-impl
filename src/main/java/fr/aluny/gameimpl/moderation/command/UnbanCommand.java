@@ -1,5 +1,8 @@
 package fr.aluny.gameimpl.moderation.command;
 
+import static fr.aluny.gameapi.utils.ComponentUtils.id;
+import static fr.aluny.gameapi.utils.ComponentUtils.name;
+
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
 import fr.aluny.gameapi.command.Default;
@@ -15,7 +18,6 @@ import fr.aluny.gameimpl.moderation.sanction.DetailedPlayerSanction;
 import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.util.List;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import xyz.xenondevs.invui.gui.Gui;
@@ -50,12 +52,12 @@ public class UnbanCommand extends Command {
                                 click.getPlayer().closeInventory();
 
                                 playerSanctionAPI.cancelSanction(sanction.getId()).filter(DetailedPlayerSanction::isCanceled).ifPresentOrElse(
-                                        updatedSanction -> player.getMessageHandler().sendComponentMessage("moderation_sanction_canceled", Placeholder.unparsed("id", String.valueOf(updatedSanction.getId())), name(playerAccount)),
-                                        () -> player.getMessageHandler().sendComponentMessage("unexpected_error"));
+                                        updatedSanction -> player.getMessageHandler().sendMessage("moderation_sanction_canceled", id(updatedSanction.getId()), name(playerAccount)),
+                                        () -> player.getMessageHandler().sendMessage("unexpected_error"));
                             });
 
                             SimpleItem infoItem = new SimpleItem(new ItemBuilder(Material.PAPER).setDisplayName(
-                                    new Translation("sanction_unban_player", Placeholder.unparsed("id", String.valueOf(sanction.getId())), name(playerAccount))).addLoreLines(
+                                    new Translation("sanction_unban_player", id(sanction.getId()), name(playerAccount))).addLoreLines(
                                     new Translation("sanction_author", Placeholder.unparsed("author", serviceManager.getPlayerAccountService().getPlayerAccount(sanction.getAuthor()).map(PlayerAccount::getName).orElse(sanction.getAuthor().toString()))),
                                     new Translation("sanction_reason", Placeholder.unparsed("reason", sanction.getDescription())))
                             );
@@ -67,16 +69,12 @@ public class UnbanCommand extends Command {
                             Window window = Window.single().setTitle(new Translation("sanction_unban_title")).setGui(gui).build(player.getPlayer());
                             serviceManager.getRunnableHelper().runSynchronously(window::open);
 
-                        }, () -> player.getMessageHandler().sendComponentMessage("moderation_sanction_not_found", name(playerAccount))), () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", targetName));
+                        }, () -> player.getMessageHandler().sendMessage("moderation_sanction_not_found", name(playerAccount))), () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", Placeholder.unparsed("arg", targetName)));
     }
 
     @TabCompleter
     public List<String> tabCompleter(Player player, String alias, String[] args) {
         return args.length == 1 ? GameUtils.getOnlinePlayersPrefixed(args[0]) : List.of();
-    }
-
-    private TagResolver name(PlayerAccount playerAccount) {
-        return Placeholder.unparsed("name", playerAccount.getName());
     }
 
 }

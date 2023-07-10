@@ -2,6 +2,7 @@ package fr.aluny.gameimpl.scoreboard.team;
 
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeamService;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -36,8 +37,10 @@ public class ScoreboardTeamServiceImpl implements ScoreboardTeamService {
 
     @Override
     public void deleteScoreboardTeam(ScoreboardTeam scoreboardTeam) {
-        scoreboardTeam.unregister();
+        new ArrayList<>(scoreboardTeam.getPlayers()).forEach(scoreboardTeam::removePlayer);
+
         this.scoreboardTeams.remove(scoreboardTeam.getName());
+        scoreboardTeam.unregister();
     }
 
     public void onPlayerJoin(Player player) {

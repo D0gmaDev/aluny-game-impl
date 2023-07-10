@@ -30,13 +30,8 @@ public class SetMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void sendMessage(String key, String... arguments) {
+    public void sendMessage(String key, TagResolver... arguments) {
         fetchReceivers().forEach(messageHandler -> messageHandler.sendMessage(key, arguments));
-    }
-
-    @Override
-    public void sendComponentMessage(String key, TagResolver... arguments) {
-        fetchReceivers().forEach(messageHandler -> messageHandler.sendComponentMessage(key, arguments));
     }
 
     @Override

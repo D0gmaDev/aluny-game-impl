@@ -8,7 +8,6 @@ import fr.aluny.gameimpl.message.SetMessageHandler.BroadcastMessageHandler;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Supplier;
-import net.kyori.adventure.text.minimessage.MiniMessage;
 import xyz.xenondevs.inventoryaccess.component.i18n.AdventureComponentLocalizer;
 
 public class MessageServiceImpl implements MessageService {
@@ -44,7 +43,4 @@ public class MessageServiceImpl implements MessageService {
         AdventureComponentLocalizer.getInstance().setComponentCreator(COMPONENT_PARSER::deserialize);
     }
 
-    static MiniMessage getComponentParser() {
-        return COMPONENT_PARSER;
-    }
 }
