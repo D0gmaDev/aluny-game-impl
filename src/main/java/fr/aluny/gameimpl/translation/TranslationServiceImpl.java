@@ -65,7 +65,7 @@ public class TranslationServiceImpl implements TranslationService {
 
     @Override
     public void loadTranslationsFromDirectory(JavaPlugin plugin, String directoryPath) {
-        listFilesInDirectory(directoryPath)
+        listFilesInDirectory(directoryPath).stream()
                 .filter(fileName -> fileName.toLowerCase().endsWith(".properties"))
                 .map(fileName -> fileName.substring(0, fileName.length() - ".properties".length()).toLowerCase())
                 .forEach(fileName -> loadTranslations(plugin, fileName, directoryPath + File.separator + fileName));
@@ -125,14 +125,14 @@ public class TranslationServiceImpl implements TranslationService {
         return getComponentTranslation(key, playerAccount.getLocale(), arguments);
     }
 
-    private Stream<String> listFilesInDirectory(String directoryPath) {
+    private List<String> listFilesInDirectory(String directoryPath) {
         try (Stream<Path> stream = Files.list(Paths.get(directoryPath))) {
             return stream.filter(file -> !Files.isDirectory(file)).map(Path::toFile)
-                    .filter(File::isFile).map(File::getName);
+                    .filter(File::isFile).map(File::getName).toList();
         } catch (IOException e) {
-            Bukkit.getLogger().severe("Cannot readin translations directory " + directoryPath);
+            Bukkit.getLogger().severe("Cannot read in translations directory " + directoryPath);
             e.printStackTrace();
-            return Stream.empty();
+            return List.of();
         }
     }
 
