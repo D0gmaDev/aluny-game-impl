@@ -6,6 +6,7 @@ import fr.aluny.gameapi.proxy.ProxyMessagingService;
 import java.util.Arrays;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.entity.Player;
@@ -30,8 +31,8 @@ public class ProxyMessagingServiceImpl implements ProxyMessagingService {
     }
 
     @Override
-    public void kickFromProxy(Player sender, String targetName, String reason) {
-        sendData(sender, "KickPlayer", targetName, reason);
+    public void kickFromProxy(Player sender, String targetName, Component reason) {
+        sendData(sender, "KickPlayer", targetName, LegacyComponentSerializer.legacySection().serialize(reason));
     }
 
     @Override

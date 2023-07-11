@@ -128,6 +128,11 @@ public class OfflineGamePlayerImpl implements OfflineGamePlayer {
     }
 
     @Override
+    public void clearPotionsEffects() {
+        this.activePotionsEffects.clear();
+    }
+
+    @Override
     public GameMode getGameMode() {
         return this.gameMode;
     }
@@ -148,7 +153,7 @@ public class OfflineGamePlayerImpl implements OfflineGamePlayer {
     }
 
     @Override
-    public int getLevels() {
+    public int getLevel() {
         return this.level;
     }
 

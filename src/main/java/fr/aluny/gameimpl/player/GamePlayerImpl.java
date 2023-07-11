@@ -128,6 +128,11 @@ public class GamePlayerImpl implements GamePlayer {
     }
 
     @Override
+    public void clearPotionsEffects() {
+        this.player.getActivePotionEffects().forEach(potionEffect -> removePotionEffect(potionEffect.getType()));
+    }
+
+    @Override
     public GameMode getGameMode() {
         return this.player.getGameMode();
     }
@@ -148,7 +153,7 @@ public class GamePlayerImpl implements GamePlayer {
     }
 
     @Override
-    public int getLevels() {
+    public int getLevel() {
         return this.player.getLevel();
     }
 
