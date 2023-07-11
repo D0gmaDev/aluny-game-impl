@@ -32,6 +32,7 @@ public class ScoreboardServiceImpl implements ScoreboardService {
         scoreboardBuilder.accept(scoreboard);
 
         scoreboard.addViewer(gamePlayer);
+        gamePlayer.setScoreboard(scoreboard);
         return scoreboard;
     }
 
