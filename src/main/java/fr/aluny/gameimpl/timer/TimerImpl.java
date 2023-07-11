@@ -28,6 +28,8 @@ public class TimerImpl implements Timer {
         SECONDS_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
 
+    private final String key;
+
     private final long     delay;
     private final long     step;
     private final TimeUnit timeUnit;
@@ -45,15 +47,16 @@ public class TimerImpl implements Timer {
     private java.util.Timer timer;
     private boolean         ended = false;
 
-    public TimerImpl(Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
-        this(delay, step, stop, timeUnit, (runOnTick != null) ? l -> runOnTick.run() : null, (runOnEnd != null) ? l -> runOnEnd.run() : null);
+    public TimerImpl(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
+        this(key, delay, step, stop, timeUnit, (runOnTick != null) ? l -> runOnTick.run() : null, (runOnEnd != null) ? l -> runOnEnd.run() : null);
     }
 
-    public TimerImpl(Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
+    public TimerImpl(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
 
         if (step == null || step <= 0L)
             throw new IllegalArgumentException("step must be a positive long.");
 
+        this.key = key;
         this.delay = delay == null ? 0L : delay;
         this.step = step;
         this.stop = stop;
@@ -63,6 +66,11 @@ public class TimerImpl implements Timer {
 
         this.timerMany = Sinks.many().replay().limit(Duration.ofSeconds(1));
         scheduler = Schedulers.boundedElastic();
+    }
+
+    @Override
+    public String getKey() {
+        return this.key;
     }
 
     @Override
