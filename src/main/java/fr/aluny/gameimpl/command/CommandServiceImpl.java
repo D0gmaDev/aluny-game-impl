@@ -24,9 +24,12 @@ public class CommandServiceImpl implements CommandService {
 
     private final ServiceManager serviceManager;
 
+    private final CommandInvoker commandInvoker;
+
     public CommandServiceImpl(CommandManager commandManager, ServiceManager serviceManager) {
         this.commandManager = commandManager;
         this.serviceManager = serviceManager;
+        this.commandInvoker = new CommandInvoker(serviceManager);
     }
 
     @Override
@@ -135,9 +138,9 @@ public class CommandServiceImpl implements CommandService {
 
         private void invokeCommand(GamePlayer gamePlayer, Command command, Method method, String[] args) {
             if (this.asyncCall)
-                serviceManager.getRunnableHelper().runAsynchronously(() -> CommandInvoker.invoke(gamePlayer, command, method, args));
+                serviceManager.getRunnableHelper().runAsynchronously(() -> commandInvoker.invoke(gamePlayer, command, method, args));
             else
-                CommandInvoker.invoke(gamePlayer, command, method, args);
+                commandInvoker.invoke(gamePlayer, command, method, args);
         }
 
         @SuppressWarnings("unchecked")
