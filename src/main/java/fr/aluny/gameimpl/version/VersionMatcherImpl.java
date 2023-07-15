@@ -20,13 +20,13 @@ public class VersionMatcherImpl {
     }
 
     private static VersionWrapper getMatchingWrapper() {
-        Optional<Supplier<VersionWrapper>> versionMatcher = Optional.ofNullable(VERSIONS.get(SERVER_VERSION));
+        Optional<VersionWrapper> versionMatcher = Optional.ofNullable(VERSIONS.get(SERVER_VERSION)).map(Supplier::get);
 
         versionMatcher.ifPresentOrElse(
                 versionWrapper -> Bukkit.getLogger().info("[VERSION] VersionWrapper " + versionWrapper.getClass().getSimpleName() + " found."),
                 () -> Bukkit.getLogger().warning(("[VERSION] VersionMatcher cannot be found for version: " + SERVER_VERSION + ". Using DummyWrapper instead, server may not work as intended."))
         );
 
-        return versionMatcher.map(Supplier::get).orElse(DUMMY_WRAPPER);
+        return versionMatcher.orElse(DUMMY_WRAPPER);
     }
 }
