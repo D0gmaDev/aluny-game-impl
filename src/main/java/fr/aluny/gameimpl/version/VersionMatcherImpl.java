@@ -12,14 +12,14 @@ public class VersionMatcherImpl {
     private static final String         SERVER_VERSION = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3].substring(1);
     private static final VersionWrapper DUMMY_WRAPPER  = new DummyWrapper();
 
-    private static final Map<String, Supplier<VersionWrapper>> VERSIONS = Map.of("1_19_R3", Wrapper_1_19_R3::new);
+    private static final Map<String, Supplier<VersionWrapper>> VERSIONS = Map.of("1_20_R1", Wrapper_1_20_R1::new);
 
 
     public static void matchVersion() {
-        VersionMatcher.setWrapper(match());
+        VersionMatcher.setWrapper(getMatchingWrapper());
     }
 
-    private static VersionWrapper match() {
+    private static VersionWrapper getMatchingWrapper() {
         Optional<Supplier<VersionWrapper>> versionMatcher = Optional.ofNullable(VERSIONS.get(SERVER_VERSION));
 
         versionMatcher.ifPresentOrElse(

@@ -2,31 +2,39 @@ package fr.aluny.gameimpl.command;
 
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.player.GamePlayer;
+import fr.aluny.gameapi.player.PlayerAccount;
+import fr.aluny.gameapi.service.ServiceManager;
+import fr.aluny.gameapi.utils.TimeUtils;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.function.Function;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-class CommandInvoker {
+final class CommandInvoker {
 
-    private static final Map<Class<?>, ArgumentParser> PARSER_MAP = new HashMap<>();
+    private final Map<Class<?>, ArgumentParser> argumentParserMap = new HashMap<>();
 
-    static {
-        PARSER_MAP.put(String.class, new ArgumentParser(Function.identity(), null));
-        PARSER_MAP.put(UUID.class, new ArgumentParser(UUID::fromString, "command_validation_not_a_uuid"));
-        PARSER_MAP.put(Long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
-        PARSER_MAP.put(long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
-        PARSER_MAP.put(Integer.class, new ArgumentParser(Integer::parseInt, "command_validation_not_an_integer"));
-        PARSER_MAP.put(int.class, new ArgumentParser(Integer::parseInt, "command_validation_not_an_integer"));
-        PARSER_MAP.put(Double.class, new ArgumentParser(Double::parseDouble, "command_validation_not_a_number"));
-        PARSER_MAP.put(double.class, new ArgumentParser(Double::parseDouble, "command_validation_not_a_number"));
-        PARSER_MAP.put(Player.class, new ArgumentParser(s -> Optional.ofNullable(Bukkit.getPlayer(s)).orElseThrow(IllegalArgumentException::new), "command_validation_player_not_found"));
+    public CommandInvoker(ServiceManager serviceManager) {
+        argumentParserMap.put(String.class, new ArgumentParser(argument -> argument, null));
+        argumentParserMap.put(UUID.class, new ArgumentParser(UUID::fromString, "command_validation_not_a_uuid"));
+        argumentParserMap.put(Long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
+        argumentParserMap.put(long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
+        argumentParserMap.put(Integer.class, new ArgumentParser(Integer::parseInt, "command_validation_not_an_integer"));
+        argumentParserMap.put(int.class, new ArgumentParser(Integer::parseInt, "command_validation_not_an_integer"));
+        argumentParserMap.put(Double.class, new ArgumentParser(Double::parseDouble, "command_validation_not_a_number"));
+        argumentParserMap.put(double.class, new ArgumentParser(Double::parseDouble, "command_validation_not_a_number"));
+
+        argumentParserMap.put(Player.class, new ArgumentParser(name -> Optional.ofNullable(Bukkit.getPlayer(name)).orElseThrow(IllegalArgumentException::new), "command_validation_player_not_found"));
+        argumentParserMap.put(GamePlayer.class, new ArgumentParser(name -> Optional.ofNullable(Bukkit.getPlayer(name)).map(serviceManager.getGamePlayerService()::getPlayer).orElseThrow(IllegalArgumentException::new), "command_validation_player_not_found"));
+        argumentParserMap.put(PlayerAccount.class, new ArgumentParser(name -> serviceManager.getPlayerAccountService().getPlayerAccountByName(name).orElseThrow(IllegalArgumentException::new), "command_validation_player_not_found"));
+        argumentParserMap.put(TemporalAmount.class, new ArgumentParser(durationString -> TimeUtils.parsePositiveTemporalAmount(durationString).orElseThrow(IllegalArgumentException::new), "command_validation_invalid_duration"));
     }
 
-    static void invoke(GamePlayer player, Command command, Method method, String[] args) {
+    public void invoke(GamePlayer player, Command command, Method method, String[] args) {
         try {
 
             if (method.getParameterCount() <= 1) {
@@ -56,7 +64,7 @@ class CommandInvoker {
                     return;
                 }
 
-                ArgumentParser commandInvoker = PARSER_MAP.get(parameterTypes[i]);
+                ArgumentParser commandInvoker = argumentParserMap.get(parameterTypes[i]);
 
                 if (commandInvoker == null)
                     throw new IllegalArgumentException("Argument class not recognized for command " + command.getClass().getName() + ": " + parameterTypes[i].getName());
@@ -76,7 +84,7 @@ class CommandInvoker {
         }
     }
 
-    private record ArgumentParser(Function<String, ?> parser, String errorMessage) {
+    private record ArgumentParser(Function<String, Object> parser, String errorMessage) {
 
     }
 

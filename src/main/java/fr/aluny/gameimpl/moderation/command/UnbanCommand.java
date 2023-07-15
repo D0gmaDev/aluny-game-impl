@@ -39,37 +39,35 @@ public class UnbanCommand extends Command {
     }
 
     @Default
-    public void defaultContext(GamePlayer player, String targetName, String[] args) {
+    public void defaultContext(GamePlayer player, PlayerAccount target, String[] args) {
 
-        serviceManager.getPlayerAccountService().getPlayerAccountByName(targetName)
-                .flatMap(playerAccount -> playerAPI.getDetailedPlayer(playerAccount.getUuid()))
-                .ifPresentOrElse(playerAccount -> playerAccount.getCurrentSanctions().stream()
-                        .filter(playerSanction -> playerSanction.isType(SanctionType.BAN) && !playerSanction.isCanceled() && playerSanction.isActive()).findAny()
-                        .flatMap(sanction -> playerSanctionAPI.getPlayerSanctionById(sanction.getId()))
-                        .ifPresentOrElse(sanction -> {
+        playerAPI.getDetailedPlayer(target.getUuid()).ifPresentOrElse(playerAccount -> playerAccount.getCurrentSanctions().stream()
+                .filter(playerSanction -> playerSanction.isType(SanctionType.BAN) && !playerSanction.isCanceled() && playerSanction.isActive()).findAny()
+                .flatMap(sanction -> playerSanctionAPI.getPlayerSanctionById(sanction.getId()))
+                .ifPresentOrElse(sanction -> {
 
-                            SimpleItem validationItem = new SimpleItem(new ItemBuilder(Material.LIME_CANDLE).setDisplayName(new Translation("sanction_validate")), click -> {
-                                click.getPlayer().closeInventory();
+                    SimpleItem validationItem = new SimpleItem(new ItemBuilder(Material.LIME_CANDLE).setDisplayName(new Translation("sanction_validate")), click -> {
+                        click.getPlayer().closeInventory();
 
-                                playerSanctionAPI.cancelSanction(sanction.getId()).filter(DetailedPlayerSanction::isCanceled).ifPresentOrElse(
-                                        updatedSanction -> player.getMessageHandler().sendMessage("moderation_sanction_canceled", id(updatedSanction.getId()), name(playerAccount)),
-                                        () -> player.getMessageHandler().sendMessage("unexpected_error"));
-                            });
+                        playerSanctionAPI.cancelSanction(sanction.getId()).filter(DetailedPlayerSanction::isCanceled).ifPresentOrElse(
+                                updatedSanction -> player.getMessageHandler().sendMessage("moderation_sanction_canceled", id(updatedSanction.getId()), name(playerAccount)),
+                                () -> player.getMessageHandler().sendMessage("unexpected_error"));
+                    });
 
-                            SimpleItem infoItem = new SimpleItem(new ItemBuilder(Material.PAPER).setDisplayName(
-                                    new Translation("sanction_unban_player", id(sanction.getId()), name(playerAccount))).addLoreLines(
-                                    new Translation("sanction_author", Placeholder.unparsed("author", serviceManager.getPlayerAccountService().getPlayerAccount(sanction.getAuthor()).map(PlayerAccount::getName).orElse(sanction.getAuthor().toString()))),
-                                    new Translation("sanction_reason", Placeholder.unparsed("reason", sanction.getDescription())))
-                            );
+                    SimpleItem infoItem = new SimpleItem(new ItemBuilder(Material.PAPER).setDisplayName(
+                            new Translation("sanction_unban_player", id(sanction.getId()), name(playerAccount))).addLoreLines(
+                            new Translation("sanction_author", Placeholder.unparsed("author", serviceManager.getPlayerAccountService().getPlayerAccount(sanction.getAuthor()).map(PlayerAccount::getName).orElse(sanction.getAuthor().toString()))),
+                            new Translation("sanction_reason", Placeholder.unparsed("reason", sanction.getDescription())))
+                    );
 
-                            SimpleItem cancelItem = new SimpleItem(new ItemBuilder(Material.RED_CANDLE).setDisplayName(new Translation("sanction_cancel")), click -> click.getPlayer().closeInventory());
+                    SimpleItem cancelItem = new SimpleItem(new ItemBuilder(Material.RED_CANDLE).setDisplayName(new Translation("sanction_cancel")), click -> click.getPlayer().closeInventory());
 
-                            Gui gui = Gui.normal().setStructure("v.i.a").addIngredient('v', validationItem).addIngredient('i', infoItem).addIngredient('a', cancelItem).build();
+                    Gui gui = Gui.normal().setStructure("v.i.a").addIngredient('v', validationItem).addIngredient('i', infoItem).addIngredient('a', cancelItem).build();
 
-                            Window window = Window.single().setTitle(new Translation("sanction_unban_title")).setGui(gui).build(player.getPlayer());
-                            serviceManager.getRunnableHelper().runSynchronously(window::open);
+                    Window window = Window.single().setTitle(new Translation("sanction_unban_title")).setGui(gui).build(player.getPlayer());
+                    serviceManager.getRunnableHelper().runSynchronously(window::open);
 
-                        }, () -> player.getMessageHandler().sendMessage("moderation_sanction_not_found", name(playerAccount))), () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", Placeholder.unparsed("arg", targetName)));
+                }, () -> player.getMessageHandler().sendMessage("moderation_sanction_not_found", name(playerAccount))), () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", Placeholder.unparsed("arg", target.getName())));
     }
 
     @TabCompleter

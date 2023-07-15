@@ -15,7 +15,7 @@ public class TimerServiceImpl implements TimerService {
 
     @Override
     public TimerImpl registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
-        TimerImpl timer = new TimerImpl(delay, step, stop, timeUnit, runOnTick, runOnEnd);
+        TimerImpl timer = new TimerImpl(key, delay, step, stop, timeUnit, runOnTick, runOnEnd);
 
         TIMERS.put(key, timer);
         return timer;
@@ -25,7 +25,7 @@ public class TimerServiceImpl implements TimerService {
     public TimerImpl registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, Runnable runOnTick, Runnable runOnEnd) {
         Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
 
-        TimerImpl timer = new TimerImpl(step.getValue(), step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
+        TimerImpl timer = new TimerImpl(key, step.getValue(), step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
 
         TIMERS.put(key, timer);
         return timer;
@@ -33,7 +33,7 @@ public class TimerServiceImpl implements TimerService {
 
     @Override
     public Timer registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
-        TimerImpl timer = new TimerImpl(delay, step, stop, timeUnit, runOnTick, runOnEnd);
+        TimerImpl timer = new TimerImpl(key, delay, step, stop, timeUnit, runOnTick, runOnEnd);
 
         TIMERS.put(key, timer);
         return timer;
@@ -43,7 +43,7 @@ public class TimerServiceImpl implements TimerService {
     public Timer registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, LongConsumer runOnTick, LongConsumer runOnEnd) {
         Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
 
-        TimerImpl timer = new TimerImpl(step.getValue(), step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
+        TimerImpl timer = new TimerImpl(key, step.getValue(), step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
 
         TIMERS.put(key, timer);
         return timer;
@@ -59,4 +59,8 @@ public class TimerServiceImpl implements TimerService {
         return TIMERS.remove(key) != null;
     }
 
+    @Override
+    public boolean unregisterTimer(Timer timer) {
+        return unregisterTimer(timer.getKey());
+    }
 }

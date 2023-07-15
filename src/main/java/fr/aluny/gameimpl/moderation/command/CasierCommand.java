@@ -1,6 +1,5 @@
 package fr.aluny.gameimpl.moderation.command;
 
-import static fr.aluny.gameapi.utils.ComponentUtils.argument;
 import static fr.aluny.gameapi.utils.ComponentUtils.id;
 import static fr.aluny.gameapi.utils.ComponentUtils.name;
 
@@ -56,36 +55,31 @@ public class CasierCommand extends Command {
     }
 
     @Default
-    public void defaultContext(GamePlayer player, String name, String[] args) {
+    public void defaultContext(GamePlayer player, PlayerAccount playerAccount, String[] args) {
 
-        serviceManager.getPlayerAccountService().getPlayerAccountByName(name).ifPresentOrElse(playerAccount -> {
+        Item headItem = new SimpleItem(new SkullBuilder(playerAccount.getName())
+                .setDisplayName(new Translation("casier_target_name",
+                        Placeholder.component("prefix", Component.text(playerAccount.getHighestRank().getPrefix(), playerAccount.getHighestRank().getTextColor())),
+                        Placeholder.component("name", Component.text(playerAccount.getName(), playerAccount.getHighestRank().getTextColor()))))
+                .addLoreLines(new Translation("casier_first_connection", Formatter.date("date", playerAccount.getCreationDate()))));
 
-            Item headItem = new SimpleItem(new SkullBuilder(playerAccount.getName())
-                    .setDisplayName(new Translation("casier_target_name",
-                            Placeholder.component("prefix", Component.text(playerAccount.getHighestRank().getPrefix(), playerAccount.getHighestRank().getTextColor())),
-                            Placeholder.component("name", Component.text(playerAccount.getName(), playerAccount.getHighestRank().getTextColor()))))
-                    .addLoreLines(new Translation("casier_first_connection", Formatter.date("date", playerAccount.getCreationDate()))));
+        List<DetailedPlayerSanction> playerDetailedSanctions = playerSanctionAPI.getPlayerDetailedSanctions(playerAccount, 30, 0);
 
-            List<DetailedPlayerSanction> playerDetailedSanctions = playerSanctionAPI.getPlayerDetailedSanctions(playerAccount, 30, 0);
+        List<Item> items = playerDetailedSanctions.stream().sorted().map(sanction -> new AsyncItem(new ItemBuilder(Material.BOOK).setDisplayName("§7Chargement..."), () -> new ItemBuilder(getMaterial(sanction.getSanctionType()))
+                .setDisplayName(new Translation("casier_details_title", Placeholder.unparsed("type", sanction.getSanctionType().name()), id(sanction.getId())))
+                .addLoreLines(
+                        new Translation("casier_reason", Placeholder.unparsed("reason", sanction.getDescription())),
+                        new Translation("casier_author", Placeholder.unparsed("author", playerAPI.getPlayer(sanction.getAuthor()).map(PlayerAccount::getName).orElse(sanction.getAuthor().toString()))),
+                        new Translation("casier_date", Formatter.date("date", sanction.getStartAt())),
+                        new Translation("casier_duration", Placeholder.unparsed("duration", TimeUtils.format(Duration.between(sanction.getStartAt(), sanction.getEndAt())))))
+                .addLoreLines(" ")
+                .addLoreLines(new Translation("casier_state", Formatter.choice("state", sanction.isCanceled() ? 2 : (sanction.isActive() ? 0 : 1))))
+        )).collect(Collectors.toList());
 
-            List<Item> items = playerDetailedSanctions.stream().sorted().map(sanction -> new AsyncItem(new ItemBuilder(Material.BOOK).setDisplayName("§7Chargement..."), () -> new ItemBuilder(getMaterial(sanction.getSanctionType()))
-                    .setDisplayName(new Translation("casier_details_title", Placeholder.unparsed("type", sanction.getSanctionType().name()), id(sanction.getId())))
-                    .addLoreLines(
-                            new Translation("casier_reason", Placeholder.unparsed("reason", sanction.getDescription())),
-                            new Translation("casier_author", Placeholder.unparsed("author", playerAPI.getPlayer(sanction.getAuthor()).map(PlayerAccount::getName).orElse(sanction.getAuthor().toString()))),
-                            new Translation("casier_date", Formatter.date("date", sanction.getStartAt())),
-                            new Translation("casier_duration", Placeholder.unparsed("duration", TimeUtils.format(Duration.between(sanction.getStartAt(), sanction.getEndAt())))))
-                    .addLoreLines(" ")
-                    .addLoreLines(new Translation("casier_state", Formatter.choice("state", sanction.isCanceled() ? 2 : (sanction.isActive() ? 0 : 1))))
-            )).collect(Collectors.toList());
+        PagedGui<Item> gui = PagedGui.items().setStructure(9, 5, CASIER_STRUCTURE).addIngredient('h', headItem).setContent(items).build();
 
-            PagedGui<Item> gui = PagedGui.items().setStructure(9, 5, CASIER_STRUCTURE).addIngredient('h', headItem).setContent(items).build();
-
-            Window window = Window.single().setGui(gui).setTitle(new Translation("casier_inventory_title", name(playerAccount))).build(player.getPlayer());
-            serviceManager.getRunnableHelper().runSynchronously(window::open);
-
-        }, () -> player.getMessageHandler().sendMessage("command_validation_player_not_found", argument(name)));
-
+        Window window = Window.single().setGui(gui).setTitle(new Translation("casier_inventory_title", name(playerAccount))).build(player.getPlayer());
+        serviceManager.getRunnableHelper().runSynchronously(window::open);
     }
 
     @TabCompleter
