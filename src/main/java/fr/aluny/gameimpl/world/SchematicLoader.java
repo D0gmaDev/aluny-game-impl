@@ -7,24 +7,17 @@ import fr.aluny.gameimpl.nbt.type.NBTList;
 import fr.aluny.gameimpl.nbt.type.TagType;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
-import org.bukkit.block.data.Bisected;
-import org.bukkit.block.data.Bisected.Half;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.Directional;
-import org.bukkit.block.data.Waterlogged;
-import org.bukkit.block.data.type.Stairs;
-import org.bukkit.block.data.type.Stairs.Shape;
+import org.bukkit.block.structure.Mirror;
+import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 
@@ -39,6 +32,7 @@ public class SchematicLoader {
         short height = schematicData.getShort("Height", (short) 0);
         short length = schematicData.getShort("Length", (short) 0);
         byte[] blocks = schematicData.getByteArray("BlockData");
+        int[] offset = schematicData.getIntArray("Offset");
 
         byte[] addId = new byte[]{ };
         if (schematicData.containsTag("AddBlocks", TagType.BYTE_ARRAY)) {
@@ -67,234 +61,136 @@ public class SchematicLoader {
 
         SchematicEntityData[] entities = new SchematicEntityData[entitiesSize];
         for (int i = 0; i < entitiesSize; i++)
-            entities[i] = parseEntity(length, height, width, entitiesList.getCompound(i));
+            entities[i] = parseEntity(length, height, width, offset, entitiesList.getCompound(i));
 
         inputStream.close();
 
-        return new SchematicImpl(version, height, width, length, entities, blocksData, sblocks, airData);
+        return new SchematicImpl(version, height, width, length, blocksData, entities, sblocks, airData);
     }
 
-    private SchematicBlockData parsePaletteData(String key) {
-        int paramsIndex = key.indexOf('[');
-
-        if (paramsIndex == -1)
-            return new SimpleBlock(getMaterialOrThrow(key));
-
-        Material material = getMaterialOrThrow(key.substring(0, paramsIndex));
-
-        String[] parameters = key.substring(paramsIndex + 1, key.length() - 1).split(",");
-
-
-        Map<String, String> params = Arrays.stream(parameters).map(s -> s.split("=")).collect(Collectors.toMap(s -> s[0], s -> s[1]));
-
-        return new ParameterizedBlock(material, params);
+    private SchematicBlockData parsePaletteData(String data) {
+        return data.contains("[") ? new ParameterizedBlock(data) : new SimpleBlock(getMaterialOrThrow(data));
     }
 
-    @SuppressWarnings("deprecation")
-    private SchematicEntityData parseEntity(short length, short height, short width, NBTCompound entityData) {
+    private SchematicEntityData parseEntity(short length, short height, short width, int[] offset, NBTCompound entityData) {
         String type = entityData.getString("Id");
-        EntityType entityType = EntityType.fromName(type.replaceFirst("minecraft:", ""));
+        EntityType entityType = getEntityTypeOrThrow(type);
 
         NBTList posList = entityData.getList("Pos");
+        double posX = posList.getDouble(0) - offset[0];
+        double posY = posList.getDouble(1) - offset[1];
+        double posZ = posList.getDouble(2) - offset[2];
 
-        double posX = posList.getDouble(0);
-        double posY = posList.getDouble(1);
-        double posZ = posList.getDouble(2);
-        return new EntityData(length, height, width, posX, posY, posZ, entityType);
+        NBTList rotationList = entityData.getList("Rotation");
+        float yaw = rotationList.getFloat(0);
+        float pitch = rotationList.getFloat(1);
+
+        Component customName = Optional.ofNullable(entityData.getString("CustomName")).map(GsonComponentSerializer.gson()::deserialize).orElse(null);
+
+        return new EntityData(length, height, width, posX, posY, posZ, pitch, yaw, entityType, customName);
     }
 
     private Material getMaterialOrThrow(String materialName) {
         return Optional.ofNullable(Material.matchMaterial(materialName)).orElseThrow(() -> new SchematicParseException("match failed: " + materialName));
     }
 
-    public static class SimpleBlock implements SchematicBlockData {
+    @SuppressWarnings("deprecation")
+    private EntityType getEntityTypeOrThrow(String entityTypeName) {
+        return Optional.ofNullable(EntityType.fromName(entityTypeName.replaceFirst("minecraft:", ""))).orElseThrow(() -> new SchematicParseException("entitytype fromName failed: " + entityTypeName));
+    }
 
-        private final Material material;
-
-        public SimpleBlock(Material material) {
-            this.material = material;
-        }
+    public record SimpleBlock(Material material) implements SchematicBlockData {
 
         @Override
         public void paste(Location location) {
             location.getBlock().setType(material);
         }
 
-        @Override
-        public void flip(Axis axis) {
-            // flip doesn't affect the block
-        }
-
-        @Override
-        public void rotate(int quart) {
-            // rotation doesn't affect the block
-        }
     }
 
-    public static class ParameterizedBlock implements SchematicBlockData {
+    public record ParameterizedBlock(BlockData blockData) implements SchematicBlockData {
 
-        private final Material material;
-
-        private       BlockFace face;
-        private       Half      half;
-        private       Shape     stairsShape;
-        private final boolean   waterLogged;
-
-        public ParameterizedBlock(Material material, Map<String, String> params) {
-            this.material = material;
-            this.face = getParam(params, "facing", BlockFace::valueOf);
-            this.half = getParam(params, "half", Half::valueOf);
-            this.stairsShape = getParam(params, "shape", Shape::valueOf);
-            this.waterLogged = Boolean.TRUE.equals(getParam(params, "waterlogged", Boolean::parseBoolean));
-        }
-
-        private static <T> T getParam(Map<String, String> params, String key, Function<String, T> function) {
-            String value = params.get(key);
-            return value == null ? null : function.apply(value.toUpperCase(Locale.ROOT));
+        public ParameterizedBlock(String data) {
+            this(Bukkit.createBlockData(data));
         }
 
         @Override
         public void paste(Location location) {
             Block block = location.getBlock();
-            block.setType(this.material);
-
-            BlockData blockData = block.getBlockData();
-
-            if (this.face != null && blockData instanceof Directional directional)
-                directional.setFacing(this.face);
-
-            if (this.half != null && blockData instanceof Bisected bisected)
-                bisected.setHalf(this.half);
-
-            if (this.stairsShape != null && blockData instanceof Stairs stairs)
-                stairs.setShape(this.stairsShape);
-
-            if (this.waterLogged && blockData instanceof Waterlogged waterlogged)
-                waterlogged.setWaterlogged(true);
-
+            block.setType(blockData.getMaterial());
             block.setBlockData(blockData);
         }
 
         @Override
-        public void flip(Axis axis) {
-            switch (axis) {
+        public SchematicBlockData flip(Axis axis) {
 
-                case X -> {
-                    if (this.face != null)
-                        this.face = switch (this.face) {
-                            case NORTH, SOUTH -> this.face.getOppositeFace();
-                            default -> this.face;
-                        };
-                    if (this.stairsShape != null)
-                        this.stairsShape = switch (this.stairsShape) {
-                            case INNER_LEFT -> Shape.INNER_RIGHT;
-                            case INNER_RIGHT -> Shape.INNER_LEFT;
-                            case OUTER_LEFT -> Shape.OUTER_RIGHT;
-                            case OUTER_RIGHT -> Shape.OUTER_LEFT;
-                            default -> this.stairsShape;
-                        };
-                }
-                case Y -> {
-                    if (this.half != null)
-                        this.half = switch (this.half) {
-                            case TOP -> Half.BOTTOM;
-                            case BOTTOM -> Half.TOP;
-                        };
-                }
-                case Z -> {
-                    if (this.face != null)
-                        this.face = switch (this.face) {
-                            case EAST, WEST -> this.face.getOppositeFace();
-                            default -> this.face;
-                        };
-                    if (this.stairsShape != null)
-                        this.stairsShape = switch (this.stairsShape) {
-                            case INNER_LEFT -> Shape.INNER_RIGHT;
-                            case INNER_RIGHT -> Shape.INNER_LEFT;
-                            case OUTER_LEFT -> Shape.OUTER_RIGHT;
-                            case OUTER_RIGHT -> Shape.OUTER_LEFT;
-                            default -> this.stairsShape;
-                        };
-                }
-            }
+            Mirror mirror = switch (axis) {
+                case X -> Mirror.LEFT_RIGHT;
+                case Y -> Mirror.NONE;
+                case Z -> Mirror.FRONT_BACK;
+            };
+
+            BlockData newData = blockData.clone();
+            newData.mirror(mirror);
+
+            return new ParameterizedBlock(newData);
         }
 
         @Override
-        public void rotate(int quart) {
-            if (this.face == null)
-                return;
+        public SchematicBlockData rotate(StructureRotation rotation) {
 
-            if (quart == 2) {
-                this.face = switch (this.face) {
-                    case NORTH, EAST, SOUTH, WEST -> this.face.getOppositeFace();
-                    default -> this.face;
-                };
-                return;
-            }
-
-            if (quart == 1) {
-                this.face = switch (this.face) {
-                    case NORTH -> BlockFace.WEST;
-                    case EAST -> BlockFace.NORTH;
-                    case SOUTH -> BlockFace.EAST;
-                    case WEST -> BlockFace.SOUTH;
-                    default -> this.face;
-                };
-                return;
-            }
-
-            rotate(2);
-            rotate(1);
+            BlockData newData = blockData.clone();
+            newData.rotate(rotation);
+            return new ParameterizedBlock(newData);
         }
 
     }
 
-    public static class EntityData implements SchematicEntityData {
-
-        private final short length;
-        private final short height;
-        private final short width;
-
-        private double posX, posY, posZ;
-
-        private final EntityType entityType;
-
-        public EntityData(short length, short height, short width, double posX, double posY, double posZ, EntityType entityType) {
-            this.length = length;
-            this.height = height;
-            this.width = width;
-            this.posX = posX;
-            this.posY = posY;
-            this.posZ = posZ;
-            this.entityType = entityType;
-        }
+    public record EntityData(short length, short height, short width, double posX, double posY, double posZ, float pitch, float yaw, EntityType entityType, Component customName) implements SchematicEntityData {
 
         @Override
         public Entity summon(Location location) {
-            return Objects.requireNonNull(location.getWorld()).spawnEntity(location.getBlock().getLocation().clone().add(this.posX, this.posY, this.posZ).getBlock().getLocation().clone().add(0.5, 0, 0.5), this.entityType);
-        }
+            Location summonLocation = location.getBlock().getLocation().clone().add(this.posX, this.posY, this.posZ);
+            summonLocation.setPitch(this.pitch);
+            summonLocation.setYaw(this.yaw);
 
-        @Override
-        public void flip(Axis axis) {
-            switch (axis) {
-                case X -> this.posZ = length - this.posZ;
-                case Y -> this.posY = height - this.posY;
-                case Z -> this.posX = width - this.posX;
+            Entity entity = Objects.requireNonNull(location.getWorld()).spawnEntity(summonLocation, this.entityType);
+            if (this.customName != null) {
+                entity.setCustomNameVisible(true);
+                entity.customName(this.customName);
             }
+
+            return entity;
         }
 
         @Override
-        public void rotate(int quart) {
-            if (quart > 0)
-                quart = 4 - quart;
+        public SchematicEntityData flip(Axis axis) {
+            return switch (axis) {
+                case X -> new EntityData(this.length, this.height, this.width, this.posX, this.posY, length - this.posZ, this.pitch, this.yaw, this.entityType, this.customName);
+                case Y -> new EntityData(this.length, this.height, this.width, this.posX, height - this.posY, this.posZ, this.pitch, this.yaw, this.entityType, this.customName);
+                case Z -> new EntityData(this.length, this.height, this.width, width - this.posX, this.posY, this.posZ, this.pitch, this.yaw, this.entityType, this.customName);
+            };
+        }
 
-            if (quart < 0)
-                quart = -quart;
+        @Override
+        public SchematicEntityData rotate(StructureRotation rotation) {
+
+            if (rotation == StructureRotation.NONE)
+                return this;
+
+            int quart = switch (rotation) {
+                case CLOCKWISE_90 -> 3;
+                case CLOCKWISE_180 -> 2;
+                case COUNTERCLOCKWISE_90 -> 1;
+                default -> throw new IllegalStateException("Unexpected value: " + rotation);
+            };
 
             double[] coords = new double[]{this.posX, this.posZ, width - this.posX, length - this.posZ};
 
-            this.posX = coords[quart % 4];
-            this.posZ = coords[(quart + 1) % 4];
+            double newPosX = coords[quart % 4];
+            double newPosZ = coords[(quart + 1) % 4];
+
+            return new EntityData(this.length, this.height, this.width, newPosX, this.posY, newPosZ, this.pitch, this.yaw, this.entityType, this.customName);
         }
     }
 
