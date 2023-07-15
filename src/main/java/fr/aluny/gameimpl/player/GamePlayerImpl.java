@@ -128,7 +128,7 @@ public class GamePlayerImpl implements GamePlayer {
     }
 
     @Override
-    public void clearPotionsEffects() {
+    public void clearPotionEffects() {
         this.player.getActivePotionEffects().forEach(potionEffect -> removePotionEffect(potionEffect.getType()));
     }
 

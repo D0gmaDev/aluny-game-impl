@@ -128,7 +128,7 @@ public class OfflineGamePlayerImpl implements OfflineGamePlayer {
     }
 
     @Override
-    public void clearPotionsEffects() {
+    public void clearPotionEffects() {
         this.activePotionsEffects.clear();
     }
 
