@@ -26,13 +26,7 @@ public class AnchorServiceImpl implements AnchorService {
     @Override
     public void unregisterWorld(World world) {
         logger.info("[GAME-Anchor] Unregistering world " + world.getName());
-        for (AnchorSource source : new ArrayList<>(sources)) {
-            source.getWorld().ifPresent(world1 -> {
-                if (world.equals(world1)) {
-                    removeSource(source);
-                }
-            });
-        }
+        sources.stream().filter(source -> source instanceof AnchorWorldSource anchorWorldSource && world.equals(anchorWorldSource.getWorld())).forEach(this::removeSource);
         logger.info("[GAME-Anchor] Unregistered world " + world.getName());
     }
 
