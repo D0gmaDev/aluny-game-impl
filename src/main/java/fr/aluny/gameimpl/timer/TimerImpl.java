@@ -1,15 +1,11 @@
 package fr.aluny.gameimpl.timer;
 
 import fr.aluny.gameapi.timer.Timer;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.LongConsumer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 import reactor.core.publisher.Sinks.EmitFailureHandler;
@@ -19,23 +15,13 @@ import reactor.core.scheduler.Schedulers;
 
 public class TimerImpl implements Timer {
 
-    private static final SimpleDateFormat HOURS_DATE_FORMAT   = new SimpleDateFormat("HH'h' mm'm' ss's'");
-    private static final SimpleDateFormat MINUTES_DATE_FORMAT = new SimpleDateFormat("mm'm' ss's'");
-    private static final SimpleDateFormat SECONDS_DATE_FORMAT = new SimpleDateFormat("ss's'");
+    private static final String HOURS_DATE_FORMAT   = "%02dh %02dm %02ds";
+    private static final String MINUTES_DATE_FORMAT = "%02dm %02ds";
+    private static final String SECONDS_DATE_FORMAT = "%02ds";
 
-    static {
-        HOURS_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-        MINUTES_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-        SECONDS_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
-
-    private final String key;
-
-    private final long     delay;
-    private final long     step;
-    private final TimeUnit timeUnit;
-
-    private Long stop;
+    private final String   key;
+    private final Duration step;
+    private       Long     stop; // can be null for endless timers
 
     private final Consumer<Timer> runOnTick;
     private final Consumer<Timer> runOnEnd;
@@ -48,29 +34,19 @@ public class TimerImpl implements Timer {
     private java.util.Timer timer;
     private boolean         ended = false;
 
-    public TimerImpl(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
-        this(key, delay, step, stop, timeUnit, (runOnTick != null) ? ((Consumer<Timer>) timer -> runOnTick.run()) : null, (runOnEnd != null) ? timer -> runOnEnd.run() : null);
-    }
-
-    public TimerImpl(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
-        this(key, delay, step, stop, timeUnit, (runOnTick != null) ? ((Consumer<Timer>) timer -> runOnTick.accept(timer.getValue())) : null, (runOnEnd != null) ? timer -> runOnEnd.accept(timer.getValue()) : null);
-    }
-
-    public TimerImpl(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
-
-        if (step == null || step <= 0L)
-            throw new IllegalArgumentException("step must be a positive long.");
+    public TimerImpl(String key, Duration step, Duration stop, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
+        if (step == null || step.isZero() || step.isNegative())
+            throw new IllegalArgumentException("step must be strictly positive.");
 
         this.key = key;
-        this.delay = delay == null ? 0L : delay;
         this.step = step;
-        this.stop = stop;
-        this.timeUnit = timeUnit;
+        this.stop = stop != null ? stop.dividedBy(step) : null;
+
         this.runOnTick = runOnTick;
         this.runOnEnd = runOnEnd;
 
         this.timerMany = Sinks.many().replay().limit(Duration.ofSeconds(1));
-        scheduler = Schedulers.boundedElastic();
+        this.scheduler = Schedulers.boundedElastic();
     }
 
     @Override
@@ -97,7 +73,7 @@ public class TimerImpl implements Timer {
 
                 timerMany.emitNext(instance, EmitFailureHandler.FAIL_FAST);
 
-                if (stop != null && value >= stop / step) {
+                if (stop != null && value >= stop) {
                     ended = true;
                     timer.cancel();
                     if (runOnEnd != null)
@@ -106,7 +82,7 @@ public class TimerImpl implements Timer {
                     timer = null;
                 }
             }
-        }, TimeUnit.MILLISECONDS.convert(this.delay, this.timeUnit), TimeUnit.MILLISECONDS.convert(this.step, this.timeUnit));
+        }, this.step.toMillis(), this.step.toMillis());
     }
 
     @Override
@@ -119,8 +95,8 @@ public class TimerImpl implements Timer {
 
     @Override
     public String getIncreasingFormattedValue() {
-        SimpleDateFormat simpleDateFormat = this.value >= 3600 ? HOURS_DATE_FORMAT : (this.value >= 60 ? MINUTES_DATE_FORMAT : SECONDS_DATE_FORMAT);
-        return simpleDateFormat.format(this.value * 1000);
+        Duration duration = this.step.multipliedBy(this.value);
+        return formatDuration(duration);
     }
 
     @Override
@@ -128,15 +104,26 @@ public class TimerImpl implements Timer {
         if (this.stop == null)
             return "∞";
 
-        long value = TimeUnit.SECONDS.convert(this.stop, this.timeUnit) - this.value;
+        Duration duration = this.step.multipliedBy(this.stop - this.value);
+        return formatDuration(duration);
+    }
 
-        SimpleDateFormat simpleDateFormat = value >= 3600 ? HOURS_DATE_FORMAT : (value >= 60 ? MINUTES_DATE_FORMAT : SECONDS_DATE_FORMAT);
-        return simpleDateFormat.format(value * 1000);
+    private String formatDuration(Duration duration) {
+        long hours = duration.toHours();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
+
+        if (hours > 0)
+            return String.format(HOURS_DATE_FORMAT, hours, minutes, seconds);
+        if (minutes > 0)
+            return String.format(MINUTES_DATE_FORMAT, minutes, seconds);
+
+        return String.format(SECONDS_DATE_FORMAT, seconds);
     }
 
     @Override
     public Flux<Timer> onTick() {
-        return timerMany.asFlux().publishOn(scheduler);
+        return this.timerMany.asFlux().publishOn(this.scheduler);
     }
 
     @Override
@@ -166,12 +153,23 @@ public class TimerImpl implements Timer {
 
     @Override
     public void setMaxValue(long value) {
-        this.stop = value;
+        this.stop = value == Long.MAX_VALUE ? null : value;
     }
 
     @Override
     public void reset() {
         this.value = 0L;
         this.ended = false;
+    }
+
+    @Override
+    public String toString() {
+        return "TimerImpl{" +
+                "key='" + key + '\'' +
+                ", step=" + step +
+                ", stop=" + stop +
+                ", value=" + value +
+                ", ended=" + ended +
+                '}';
     }
 }

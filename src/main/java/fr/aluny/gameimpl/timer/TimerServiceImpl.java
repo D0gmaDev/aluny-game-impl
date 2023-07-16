@@ -3,6 +3,7 @@ package fr.aluny.gameimpl.timer;
 import fr.aluny.gameapi.timer.Timer;
 import fr.aluny.gameapi.timer.TimerService;
 import fr.aluny.gameapi.value.TimeValue;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -12,53 +13,63 @@ import java.util.function.LongConsumer;
 
 public class TimerServiceImpl implements TimerService {
 
-    private static final Map<String, TimerImpl> TIMERS = new HashMap<>();
+    private static final Map<String, Timer> TIMERS = new HashMap<>();
 
     @Override
-    public TimerImpl registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
-        TimerImpl timer = new TimerImpl(key, delay, step, stop, timeUnit, runOnTick, runOnEnd);
+    public Timer registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
+        LongConsumer tickConsumer = runOnTick != null ? l -> runOnTick.run() : null;
+        LongConsumer endConsumer = runOnEnd != null ? l -> runOnEnd.run() : null;
 
-        TIMERS.put(key, timer);
-        return timer;
-    }
-
-    @Override
-    public TimerImpl registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, Runnable runOnTick, Runnable runOnEnd) {
-        Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
-        return registerTimer(key, 0L, step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
+        return registerValueTimer(key, step, stop, timeUnit, tickConsumer, endConsumer);
     }
 
     @Override
     public Timer registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
-        TimerImpl timer = new TimerImpl(key, delay, step, stop, timeUnit, runOnTick, runOnEnd);
+        return registerValueTimer(key, step, stop, timeUnit, runOnTick, runOnEnd);
+    }
 
-        TIMERS.put(key, timer);
+    @Override
+    public Timer createTimer(String key, Duration step, Duration stop, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
+        return new TimerImpl(key, step, stop, runOnTick, runOnEnd);
+    }
+
+    @Override
+    public Timer registerTimer(String key, Duration step, Duration stop, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
+        Timer timer = createTimer(key, step, stop, runOnTick, runOnEnd);
+        registerTimer(timer);
         return timer;
     }
 
     @Override
-    public Timer registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, LongConsumer runOnTick, LongConsumer runOnEnd) {
-        Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
-        return registerTimer(key, 0L, step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
+    public Timer registerRunnableTimer(String key, Duration step, Duration stop, Runnable runOnTick, Runnable runOnEnd) {
+        Consumer<Timer> timerRunOnTick = runOnTick != null ? timer -> runOnTick.run() : null;
+        Consumer<Timer> timerRunOnEnd = runOnEnd != null ? timer -> runOnEnd.run() : null;
+
+        return registerTimer(key, step, stop, timerRunOnTick, timerRunOnEnd);
     }
 
     @Override
-    public Timer registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
-        TimerImpl timer = new TimerImpl(key, delay, step, stop, timeUnit, runOnTick, runOnEnd);
+    public Timer registerValueTimer(String key, long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
+        Consumer<Timer> timerRunOnTick = runOnTick != null ? timer -> runOnTick.accept(timer.getValue()) : null;
+        Consumer<Timer> timerRunOnEnd = runOnEnd != null ? timer -> runOnEnd.accept(timer.getValue()) : null;
 
-        TIMERS.put(key, timer);
-        return timer;
+        return registerTimer(key, Duration.of(step, timeUnit.toChronoUnit()), stop != null ? Duration.of(stop, timeUnit.toChronoUnit()) : null, timerRunOnTick, timerRunOnEnd);
     }
 
     @Override
     public Timer registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
-        Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
-        return registerTimer(key, 0L, step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
+        Duration stopDuration = stop != null ? stop.toDuration() : null;
+        return registerTimer(key, step.toDuration(), stopDuration, runOnTick, runOnEnd);
     }
 
     @Override
     public Optional<Timer> getTimer(String key) {
         return Optional.ofNullable(TIMERS.get(key));
+    }
+
+    @Override
+    public void registerTimer(Timer timer) {
+        TIMERS.put(timer.getKey(), timer);
     }
 
     @Override

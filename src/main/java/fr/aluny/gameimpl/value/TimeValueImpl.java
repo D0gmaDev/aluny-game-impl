@@ -2,6 +2,7 @@ package fr.aluny.gameimpl.value;
 
 import fr.aluny.gameapi.value.TimeValue;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -36,7 +37,7 @@ public class TimeValueImpl extends NumericValueImpl<Long> implements TimeValue {
 
     @Override
     public String getFormattedTime() {
-        return getDateFormat(getValue()).format(TimeUnit.MILLISECONDS.convert(getValue(), this.timeUnit));
+        return getDateFormat(getLongValue()).format(TimeUnit.MILLISECONDS.convert(getValue(), this.timeUnit));
     }
 
     @Override
@@ -72,5 +73,10 @@ public class TimeValueImpl extends NumericValueImpl<Long> implements TimeValue {
     @Override
     public TimeUnit getTimeUnit() {
         return this.timeUnit;
+    }
+
+    @Override
+    public Duration toDuration() {
+        return Duration.of(getLongValue(), this.timeUnit.toChronoUnit());
     }
 }
