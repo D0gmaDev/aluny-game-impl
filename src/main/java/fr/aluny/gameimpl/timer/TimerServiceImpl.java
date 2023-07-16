@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 
 public class TimerServiceImpl implements TimerService {
@@ -24,11 +25,7 @@ public class TimerServiceImpl implements TimerService {
     @Override
     public TimerImpl registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, Runnable runOnTick, Runnable runOnEnd) {
         Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
-
-        TimerImpl timer = new TimerImpl(key, step.getValue(), step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
-
-        TIMERS.put(key, timer);
-        return timer;
+        return registerTimer(key, 0L, step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
     }
 
     @Override
@@ -42,11 +39,21 @@ public class TimerServiceImpl implements TimerService {
     @Override
     public Timer registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, LongConsumer runOnTick, LongConsumer runOnEnd) {
         Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
+        return registerTimer(key, 0L, step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
+    }
 
-        TimerImpl timer = new TimerImpl(key, step.getValue(), step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
+    @Override
+    public Timer registerTimer(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
+        TimerImpl timer = new TimerImpl(key, delay, step, stop, timeUnit, runOnTick, runOnEnd);
 
         TIMERS.put(key, timer);
         return timer;
+    }
+
+    @Override
+    public Timer registerTimerFromTimeValue(String key, TimeValue step, TimeValue stop, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
+        Long stopLong = stop != null ? step.getTimeUnit().convert(stop.getLongValue(), stop.getTimeUnit()) : null;
+        return registerTimer(key, 0L, step.getLongValue(), stopLong, step.getTimeUnit(), runOnTick, runOnEnd);
     }
 
     @Override

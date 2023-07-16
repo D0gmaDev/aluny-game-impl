@@ -1,50 +1,50 @@
 package fr.aluny.gameimpl.world.anchor;
 
 import fr.aluny.gameapi.world.anchor.Anchor;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 
-public class AnchorWorldSource extends AnchorSource {
+public class AnchorWorldSource implements AnchorSource {
 
     private static final String     INVALID_NAME = "#tobedeleted";
     private static final EntityType MARKER_TYPE  = EntityType.MARKER;
 
     private static final Logger logger = Bukkit.getLogger();
 
-    private final String       worldName;
-    private final List<Anchor> anchors = new ArrayList<>();
+    private final String                    worldName;
+    private final Map<String, List<Anchor>> anchors = new HashMap<>();
 
     public AnchorWorldSource(World world) {
         this.worldName = world.getName();
+
         triggerLoads(world);
         loadAllInMemory(world);
     }
 
     @Override
     public Optional<Anchor> findOne(String key) {
-        return anchors.stream().filter(anchor -> anchor.key().equals(key)).findAny();
+        return Optional.ofNullable(anchors.get(key)).filter(list -> !list.isEmpty()).map(list -> list.get(0));
     }
 
     @Override
     public List<Anchor> findMany(String key) {
-        return anchors.stream().filter(anchor -> anchor.key().equals(key)).collect(Collectors.toList());
+        return Optional.ofNullable(anchors.get(key)).map(Collections::unmodifiableList).orElse(List.of());
     }
 
     @Override
     public List<Anchor> findAll() {
-        return new ArrayList<>(anchors);
+        return anchors.values().stream().flatMap(List::stream).toList();
     }
 
-    @Override
-    public Optional<World> getWorld() {
-        return Optional.ofNullable(Bukkit.getWorld(worldName));
+    public World getWorld() {
+        return Bukkit.getWorld(worldName);
     }
 
     private void triggerLoads(World world) {
@@ -52,66 +52,82 @@ public class AnchorWorldSource extends AnchorSource {
         if (entityList.size() == 0)
             return;
 
-        int newlyLoaded = 0;
-        for (Entity e : entityList) {
-            if (e.getCustomName() != null && e.getCustomName().equalsIgnoreCase(INVALID_NAME))
-                continue;
-            newlyLoaded++;
+        boolean newlyLoaded = false;
 
-            String[] parameters = e.getName().split(" ");
+        for (Entity entity : entityList) {
+            if (entity.customName() != null && name(entity).equalsIgnoreCase(INVALID_NAME))
+                continue;
+
+            newlyLoaded = true;
+
+            String[] parameters = entity.getName().split(" ");
             int chunkX = Integer.parseInt(parameters[1]) / 16;
             int chunkY = Integer.parseInt(parameters[2]) / 16;
-            int radius = 3;
-            if (parameters.length >= 4)
-                radius = Integer.parseInt(parameters[3]);
+            int radius = parameters.length >= 4 ? Integer.parseInt(parameters[3]) : 3;
 
             logger.info("[GAME-Anchor-AS] #load armor stand (" + chunkX + "," + chunkY + "," + radius + ")");
+
             for (int cx = chunkX - radius / 2; cx < chunkX + radius / 2; cx++)
                 for (int cy = chunkY - radius / 2; cy < chunkY + radius / 2; cy++)
                     world.loadChunk(cx, cy);
 
-            e.setCustomName(INVALID_NAME);
-            e.remove();
+            entity.customName(Component.text(INVALID_NAME));
+            entity.remove();
         }
 
-        if (newlyLoaded > 0)
+        if (newlyLoaded)
             triggerLoads(world);
     }
 
     private void loadAllInMemory(World world) {
-        List<Entity> armorStands = worldFindAll(world);
-        for (Entity entity : armorStands) {
-            if (entity.getCustomName() != null && entity.getCustomName().equals(INVALID_NAME))
-                continue;
+        worldFindAll(world).stream()
+                .filter(entity -> !entity.getName().equals(INVALID_NAME))
+                .forEach(entity -> {
+                    Anchor anchor = createAnchorFromEntity(entity);
+                    logger.info("[GAME-Anchor-AS] Stored " + anchor);
 
-            Anchor anchor = createAnchorFromEntity(entity);
-            logger.info("[GAME-Anchor-AS] Stored " + anchor);
-            anchors.add(anchor);
-            entity.remove();
-        }
+                    if (!anchors.containsKey(anchor.key()))
+                        anchors.put(anchor.key(), new ArrayList<>());
+
+                    anchors.get(anchor.key()).add(anchor);
+
+                    entity.remove();
+                });
     }
 
     private Anchor createAnchorFromEntity(Entity entity) {
-        return createAnchorFromString(entity.getName(), entity.getLocation());
+        return createAnchorFromString(name(entity), entity.getLocation());
+    }
+
+    private Anchor createAnchorFromString(String string, Location location) {
+
+        // Only allow # format
+        if (string.length() < 2 || !string.startsWith("#"))
+            return null;
+
+        // Remove #, split by spaces
+        String[] split = string.substring(1).split(" ");
+
+        String key = split[0];
+        String[] args = Arrays.copyOfRange(split, 1, split.length);
+
+        return new Anchor(key, args, location);
     }
 
     private List<Entity> worldFindAll(World world) {
-        ArrayList<Entity> entities = new ArrayList<>();
-
-        for (Entity entity : world.getEntities())
-            if (entity.getType() == MARKER_TYPE && entity.getName().startsWith("#"))
-                entities.add(entity);
-
-        return entities;
+        return world.getEntities().stream()
+                .filter(entity -> entity.getType() == MARKER_TYPE && name(entity).startsWith("#"))
+                .toList();
     }
 
     private List<Entity> worldFindLoad(World world) {
-        ArrayList<Entity> entities = new ArrayList<>();
+        return world.getEntities().stream()
+                .filter(entity -> entity.getType() == MARKER_TYPE && name(entity).startsWith("#load"))
+                .toList();
+    }
 
-        for (Entity entity : world.getEntities())
-            if (entity.getType() == MARKER_TYPE && entity.getName().startsWith("#load"))
-                entities.add(entity);
-
-        return entities;
+    private String name(Entity entity) {
+        Component customName = Optional.ofNullable(entity.customName()).orElse(Component.empty());
+        return PlainTextComponentSerializer.plainText().serialize(customName);
     }
 }

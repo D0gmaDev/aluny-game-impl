@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.TimeZone;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
@@ -36,8 +37,8 @@ public class TimerImpl implements Timer {
 
     private Long stop;
 
-    private final LongConsumer runOnTick;
-    private final LongConsumer runOnEnd;
+    private final Consumer<Timer> runOnTick;
+    private final Consumer<Timer> runOnEnd;
 
     private final Many<Timer>    timerMany;
     private final Scheduler      scheduler;
@@ -48,10 +49,14 @@ public class TimerImpl implements Timer {
     private boolean         ended = false;
 
     public TimerImpl(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Runnable runOnTick, Runnable runOnEnd) {
-        this(key, delay, step, stop, timeUnit, (runOnTick != null) ? l -> runOnTick.run() : null, (runOnEnd != null) ? l -> runOnEnd.run() : null);
+        this(key, delay, step, stop, timeUnit, (runOnTick != null) ? ((Consumer<Timer>) timer -> runOnTick.run()) : null, (runOnEnd != null) ? timer -> runOnEnd.run() : null);
     }
 
     public TimerImpl(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, LongConsumer runOnTick, LongConsumer runOnEnd) {
+        this(key, delay, step, stop, timeUnit, (runOnTick != null) ? ((Consumer<Timer>) timer -> runOnTick.accept(timer.getValue())) : null, (runOnEnd != null) ? timer -> runOnEnd.accept(timer.getValue()) : null);
+    }
+
+    public TimerImpl(String key, Long delay, Long step, Long stop, TimeUnit timeUnit, Consumer<Timer> runOnTick, Consumer<Timer> runOnEnd) {
 
         if (step == null || step <= 0L)
             throw new IllegalArgumentException("step must be a positive long.");
@@ -88,7 +93,7 @@ public class TimerImpl implements Timer {
                 value++;
 
                 if (runOnTick != null)
-                    runOnTick.accept(value);
+                    runOnTick.accept(instance);
 
                 timerMany.emitNext(instance, EmitFailureHandler.FAIL_FAST);
 
@@ -96,7 +101,7 @@ public class TimerImpl implements Timer {
                     ended = true;
                     timer.cancel();
                     if (runOnEnd != null)
-                        runOnEnd.accept(value);
+                        runOnEnd.accept(instance);
                     endTasks.forEach(Runnable::run);
                     timer = null;
                 }
