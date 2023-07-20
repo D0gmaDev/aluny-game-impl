@@ -24,61 +24,61 @@ public class ValueServiceImpl implements ValueService {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Number> NumericValueImpl<T> createNumericValue(String key, String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
-        return (NumericValueImpl<T>) NUMERIC_MAP.createValueOrReset(key, () -> createUnregisteredNumericValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep));
+    public <T extends Number & Comparable<T>> NumericValueImpl<T> registerNumericValue(String key, String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
+        return (NumericValueImpl<T>) NUMERIC_MAP.registerValueIfAbsent(key, () -> createNumericValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep));
     }
 
     @Override
-    public BooleanValueImpl createBooleanValue(String key, String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
-        return BOOLEAN_MAP.createValueOrReset(key, () -> createUnregisteredBooleanValue(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue));
+    public BooleanValueImpl registerBooleanValue(String key, String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
+        return BOOLEAN_MAP.registerValueIfAbsent(key, () -> createBooleanValue(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue));
     }
 
     @Override
-    public TimeValueImpl createTimeValue(String key, String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
-        return TIME_MAP.createValueOrReset(key, () -> createUnregisteredTimeValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit));
+    public TimeValueImpl registerTimeValue(String key, String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
+        return TIME_MAP.registerValueIfAbsent(key, () -> createTimeValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit));
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Enum<T>> EnumValueImpl<T> createEnumValue(String key, String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
-        return (EnumValueImpl<T>) ENUM_MAP.createValueOrReset(key, () -> createUnregisteredEnumValue(nameKey, enumerationClass, defaultValue, descriptionKeys));
+    public <T extends Enum<T>> EnumValueImpl<T> registerEnumValue(String key, String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
+        return (EnumValueImpl<T>) ENUM_MAP.registerValueIfAbsent(key, () -> createEnumValue(nameKey, enumerationClass, defaultValue, descriptionKeys));
     }
 
     @Override
-    public StringValueImpl createStringValue(String key, String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
-        return STRING_MAP.createValueOrReset(key, () -> createUnregisteredStringValue(nameKey, descriptionKey, defaultValue, minLength, maxLength));
+    public StringValueImpl registerStringValue(String key, String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
+        return STRING_MAP.registerValueIfAbsent(key, () -> createStringValue(nameKey, descriptionKey, defaultValue, minLength, maxLength));
     }
 
     @Override
-    public <T extends Number> NumericValueImpl<T> createUnregisteredNumericValue(String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
+    public <T extends Number & Comparable<T>> NumericValueImpl<T> createNumericValue(String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
         return new NumericValueImpl<>(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep);
     }
 
     @Override
-    public BooleanValueImpl createUnregisteredBooleanValue(String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
+    public BooleanValueImpl createBooleanValue(String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
         return new BooleanValueImpl(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue);
     }
 
     @Override
-    public TimeValueImpl createUnregisteredTimeValue(String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
+    public TimeValueImpl createTimeValue(String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
         return new TimeValueImpl(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit);
     }
 
     @Override
-    public <T extends Enum<T>> EnumValueImpl<T> createUnregisteredEnumValue(String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
+    public <T extends Enum<T>> EnumValueImpl<T> createEnumValue(String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
         return new EnumValueImpl<>(nameKey, enumerationClass, defaultValue, descriptionKeys);
     }
 
     @Override
-    public StringValueImpl createUnregisteredStringValue(String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
+    public StringValueImpl createStringValue(String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
         return new StringValueImpl(nameKey, descriptionKey, defaultValue, minLength, maxLength);
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Number> Optional<NumericValue<T>> getNumericValue(String key) {
+    public <T extends Number & Comparable<T>> Optional<NumericValue<T>> getNumericValue(Class<T> numericType, String key) {
         try {
-            return Optional.ofNullable((NumericValueImpl<T>) NUMERIC_MAP.get(key));
+            return Optional.ofNullable(NUMERIC_MAP.get(key)).filter(numericValue -> numericType.isInstance(numericValue.getValue())).map(numericValue -> (NumericValueImpl<T>) numericValue);
         } catch (ClassCastException ex) {
             Bukkit.getLogger().log(Level.SEVERE, "Tried to cast a NumericValueImpl to a different type!", ex);
             return Optional.empty();
@@ -97,9 +97,9 @@ public class ValueServiceImpl implements ValueService {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Enum<T>> Optional<EnumValue<T>> getEnumValue(String key) {
+    public <T extends Enum<T>> Optional<EnumValue<T>> getEnumValue(Class<T> enumClass, String key) {
         try {
-            return Optional.ofNullable((EnumValueImpl<T>) ENUM_MAP.get(key));
+            return Optional.ofNullable(ENUM_MAP.get(key)).filter(enumValue -> enumClass.isInstance(enumValue.getValue())).map(enumValue -> (EnumValueImpl<T>) enumValue);
         } catch (ClassCastException ex) {
             Bukkit.getLogger().log(Level.SEVERE, "Tried to cast an EnumValueImpl to a different type!", ex);
             return Optional.empty();
@@ -124,12 +124,9 @@ public class ValueServiceImpl implements ValueService {
 
         private final Map<String, T> values = new HashMap<>();
 
-        public T createValueOrReset(String key, Supplier<T> instantiation) {
+        public T registerValueIfAbsent(String key, Supplier<T> instantiation) {
             if (values.containsKey(key)) {
-                T value = values.get(key);
-
-                value.reset();
-                return value;
+                return values.get(key);
             }
 
             T value = instantiation.get();

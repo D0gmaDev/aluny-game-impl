@@ -5,16 +5,16 @@ import fr.aluny.gameapi.value.ValueRestriction;
 import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 public abstract class Value<T> {
 
-    private final List<IOnValueChanged<T>> subscribers = Collections.synchronizedList(new ArrayList<>());
+    private final List<IOnValueChanged<T>>  subscribers  = new ArrayList<>();
+    private final List<ValueRestriction<T>> restrictions = new ArrayList<>();
 
-    private final Map<String, ValueRestriction<T>> restrictions = Collections.synchronizedMap(new HashMap<>());
+    public abstract T getValue();
 
     public abstract void reset();
 
@@ -37,23 +37,33 @@ public abstract class Value<T> {
             sub.valueChanged(oldValue, newValue);
     }
 
-    public void addRestriction(String key, RestrictionType type, T value) {
-        addRestriction(key, new ValueRestriction<>(type, value));
+    public ValueRestriction<T> addRestriction(RestrictionType type, T value) {
+        ValueRestriction<T> restriction = new ValueRestriction<>(UUID.randomUUID(), type, value);
+        addRestriction(restriction);
+        return restriction;
     }
 
-    public void addRestriction(String key, ValueRestriction<T> restriction) {
-        restrictions.put(key, restriction);
+    public void addRestriction(ValueRestriction<T> restriction) {
+        if (canApply(restriction) && !restrictions.contains(restriction))
+            restrictions.add(restriction);
     }
 
-    public void removeRestriction(String key) {
-        restrictions.remove(key);
+    public void removeRestriction(ValueRestriction<T> restriction) {
+        restrictions.remove(restriction);
+    }
+
+    public boolean canApply(ValueRestriction<T> restriction) {
+        if (restriction.type().equals(RestrictionType.LOCKED_VALUE))
+            return !isLocked() || Objects.equals(restriction.value(), getValue());
+
+        return true;
     }
 
     public boolean isLocked() {
-        return restrictions.values().stream().anyMatch(restriction -> restriction.isType(RestrictionType.LOCKED_VALUE));
+        return restrictions.stream().anyMatch(restriction -> restriction.isType(RestrictionType.LOCKED_VALUE));
     }
 
     protected List<ValueRestriction<T>> getRestrictions() {
-        return new ArrayList<>(restrictions.values());
+        return Collections.unmodifiableList(restrictions);
     }
 }

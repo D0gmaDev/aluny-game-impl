@@ -17,10 +17,13 @@ public class StringValueImpl extends Value<String> implements StringValue {
     private String value;
 
     public StringValueImpl(String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
-        this.nameKey = nameKey;
+        this.nameKey = Objects.requireNonNull(nameKey);
         this.descriptionKey = descriptionKey;
         this.minLength = minLength;
         this.maxLength = maxLength;
+
+        if (defaultValue == null || defaultValue.length() < minLength || defaultValue.length() > maxLength)
+            throw new IllegalArgumentException("default value must be non-null and of acceptable length.");
 
         this.defaultValue = defaultValue;
         this.value = defaultValue;
@@ -79,9 +82,15 @@ public class StringValueImpl extends Value<String> implements StringValue {
     }
 
     @Override
-    public void addRestriction(String key, ValueRestriction<String> restriction) {
-        super.addRestriction(key, restriction);
-        if (restriction.isType(RestrictionType.LOCKED_VALUE) && !restriction.getValue().equals(getValue()))
-            setValue(restriction.getValue());
+    public void addRestriction(ValueRestriction<String> restriction) {
+        super.addRestriction(restriction);
+
+        if (restriction.isType(RestrictionType.LOCKED_VALUE) && !restriction.value().equals(getValue()))
+            setValue(restriction.value());
+    }
+
+    @Override
+    public String toString() {
+        return "StringValue(" + value + ')';
     }
 }

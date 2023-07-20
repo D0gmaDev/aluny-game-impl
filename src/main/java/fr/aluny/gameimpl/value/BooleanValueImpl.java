@@ -3,6 +3,7 @@ package fr.aluny.gameimpl.value;
 import fr.aluny.gameapi.value.BooleanValue;
 import fr.aluny.gameapi.value.ValueRestriction;
 import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
+import java.util.Objects;
 
 public class BooleanValueImpl extends Value<Boolean> implements BooleanValue {
 
@@ -14,7 +15,7 @@ public class BooleanValueImpl extends Value<Boolean> implements BooleanValue {
     private boolean value;
 
     public BooleanValueImpl(String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
-        this.nameKey = nameKey;
+        this.nameKey = Objects.requireNonNull(nameKey);
         this.trueDescriptionKey = trueDescriptionKey;
         this.falseDescriptionKey = falseDescriptionKey;
 
@@ -70,9 +71,15 @@ public class BooleanValueImpl extends Value<Boolean> implements BooleanValue {
     }
 
     @Override
-    public void addRestriction(String key, ValueRestriction<Boolean> valueRestriction) {
-        super.addRestriction(key, valueRestriction);
-        if (valueRestriction.isType(RestrictionType.LOCKED_VALUE) && valueRestriction.getValue() != getValue())
+    public void addRestriction(ValueRestriction<Boolean> valueRestriction) {
+        super.addRestriction(valueRestriction);
+
+        if (valueRestriction.isType(RestrictionType.LOCKED_VALUE) && valueRestriction.value() != getBooleanValue())
             toggle();
+    }
+
+    @Override
+    public String toString() {
+        return "BooleanValue(" + value + ')';
     }
 }
