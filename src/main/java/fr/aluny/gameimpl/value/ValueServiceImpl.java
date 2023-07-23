@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import org.bukkit.Bukkit;
 
 public class ValueServiceImpl implements ValueService {
 
@@ -16,10 +14,9 @@ public class ValueServiceImpl implements ValueService {
     private static final ValueMap<EnumValueImpl<?>>                   ENUM_MAP    = new ValueMap<>();
     private static final ValueMap<StringValueImpl>                    STRING_MAP  = new ValueMap<>();
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T extends Number & Comparable<T>> NumericValueImpl<T> registerNumericValue(String key, String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
-        return (NumericValueImpl<T>) NUMERIC_MAP.registerValue(key, createNumericValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep));
+        return NUMERIC_MAP.registerUnsafeValue(key, createNumericValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep));
     }
 
     @Override
@@ -32,10 +29,9 @@ public class ValueServiceImpl implements ValueService {
         return TIME_MAP.registerValue(key, createTimeValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T extends Enum<T>> EnumValueImpl<T> registerEnumValue(String key, String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
-        return (EnumValueImpl<T>) ENUM_MAP.registerValue(key, createEnumValue(nameKey, enumerationClass, defaultValue, descriptionKeys));
+        return ENUM_MAP.registerUnsafeValue(key, createEnumValue(nameKey, enumerationClass, defaultValue, descriptionKeys));
     }
 
     @Override
@@ -68,15 +64,9 @@ public class ValueServiceImpl implements ValueService {
         return new StringValueImpl(nameKey, descriptionKey, defaultValue, minLength, maxLength);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T extends Number & Comparable<T>> Optional<NumericValueImpl<T>> getNumericValue(Class<T> numericType, String key) {
-        try {
-            return Optional.ofNullable(NUMERIC_MAP.getValue(key)).filter(numericValue -> numericType.isInstance(numericValue.getValue())).map(numericValue -> (NumericValueImpl<T>) numericValue);
-        } catch (ClassCastException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "Tried to cast a NumericValueImpl to a different type!", ex);
-            return Optional.empty();
-        }
+        return Optional.ofNullable(NUMERIC_MAP.getUnsafeValue(key));
     }
 
     @Override
@@ -89,15 +79,9 @@ public class ValueServiceImpl implements ValueService {
         return Optional.ofNullable(TIME_MAP.getValue(key));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public <T extends Enum<T>> Optional<EnumValueImpl<T>> getEnumValue(Class<T> enumClass, String key) {
-        try {
-            return Optional.ofNullable(ENUM_MAP.getValue(key)).filter(enumValue -> enumClass.isInstance(enumValue.getValue())).map(enumValue -> (EnumValueImpl<T>) enumValue);
-        } catch (ClassCastException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "Tried to cast an EnumValueImpl to a different type!", ex);
-            return Optional.empty();
-        }
+        return Optional.ofNullable(ENUM_MAP.getUnsafeValue(key));
     }
 
     @Override
@@ -123,8 +107,18 @@ public class ValueServiceImpl implements ValueService {
             return value;
         }
 
+        @SuppressWarnings("unchecked")
+        public <U extends T> U registerUnsafeValue(String key, T value) {
+            return (U) registerValue(key, value);
+        }
+
         public T getValue(String key) {
             return values.get(key);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <U extends T> U getUnsafeValue(String key) {
+            return (U) getValue(key);
         }
 
         public Optional<T> remove(String key) {
