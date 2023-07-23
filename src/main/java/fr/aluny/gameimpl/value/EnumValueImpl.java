@@ -6,7 +6,7 @@ import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class EnumValueImpl<T extends Enum<T>> extends Value<T> implements EnumValue<T> {
+public final class EnumValueImpl<T extends Enum<T>> extends Value<T> implements EnumValue<T> {
 
     private final String   nameKey;
     private final String[] descriptionKeys;

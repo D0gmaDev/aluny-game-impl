@@ -5,7 +5,7 @@ import fr.aluny.gameapi.value.ValueRestriction;
 import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
 import java.util.Objects;
 
-public class StringValueImpl extends Value<String> implements StringValue {
+public final class StringValueImpl extends Value<String> implements StringValue {
 
     private final String nameKey;
     private final String descriptionKey;
@@ -23,7 +23,7 @@ public class StringValueImpl extends Value<String> implements StringValue {
         this.maxLength = maxLength;
 
         if (defaultValue == null || defaultValue.length() < minLength || defaultValue.length() > maxLength)
-            throw new IllegalArgumentException("default value must be non-null and of acceptable length.");
+            throw new IllegalArgumentException("default value must be of acceptable length.");
 
         this.defaultValue = defaultValue;
         this.value = defaultValue;

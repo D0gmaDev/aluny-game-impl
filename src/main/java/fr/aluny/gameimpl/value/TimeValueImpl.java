@@ -7,7 +7,7 @@ import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-public class TimeValueImpl extends NumericValueImpl<Long> implements TimeValue {
+public final class TimeValueImpl extends NumericValueImpl<Long> implements TimeValue {
 
     private static final SimpleDateFormat HOUR_DATE_FORMAT     = new SimpleDateFormat("HH'h' mm'm' ss's'");
     private static final SimpleDateFormat MINUTE_DATE_FORMAT   = new SimpleDateFormat("mm'm' ss's'");

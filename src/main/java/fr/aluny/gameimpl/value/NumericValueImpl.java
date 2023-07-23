@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @SuppressWarnings("unchecked")
-public class NumericValueImpl<T extends Number & Comparable<T>> extends Value<T> implements NumericValue<T> {
+public sealed class NumericValueImpl<T extends Number & Comparable<T>> extends Value<T> implements NumericValue<T> permits TimeValueImpl {
 
     private static final DecimalFormat DOUBLE_DECIMAL = new DecimalFormat("#.##");
 

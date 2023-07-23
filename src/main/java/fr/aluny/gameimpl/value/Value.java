@@ -1,5 +1,6 @@
 package fr.aluny.gameimpl.value;
 
+import fr.aluny.gameapi.value.GeneralValue;
 import fr.aluny.gameapi.value.IOnValueChanged;
 import fr.aluny.gameapi.value.ValueRestriction;
 import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
@@ -9,21 +10,19 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public abstract class Value<T> {
+public abstract sealed class Value<T> implements GeneralValue<T> permits BooleanValueImpl, EnumValueImpl, NumericValueImpl, StringValueImpl {
 
     private final List<IOnValueChanged<T>>  subscribers  = new ArrayList<>();
     private final List<ValueRestriction<T>> restrictions = new ArrayList<>();
 
-    public abstract T getValue();
-
-    public abstract void reset();
-
+    @Override
     public IOnValueChanged<T> subscribeOnValueChanged(IOnValueChanged<T> sub) {
         if (!subscribers.contains(sub))
             subscribers.add(sub);
         return sub;
     }
 
+    @Override
     public boolean unsubscribeOnValueChanged(IOnValueChanged<T> sub) {
         return subscribers.remove(sub);
     }
@@ -37,21 +36,25 @@ public abstract class Value<T> {
             sub.valueChanged(oldValue, newValue);
     }
 
+    @Override
     public ValueRestriction<T> addRestriction(RestrictionType type, T value) {
         ValueRestriction<T> restriction = new ValueRestriction<>(UUID.randomUUID(), type, value);
         addRestriction(restriction);
         return restriction;
     }
 
+    @Override
     public void addRestriction(ValueRestriction<T> restriction) {
         if (canApply(restriction) && !restrictions.contains(restriction))
             restrictions.add(restriction);
     }
 
+    @Override
     public void removeRestriction(ValueRestriction<T> restriction) {
         restrictions.remove(restriction);
     }
 
+    @Override
     public boolean canApply(ValueRestriction<T> restriction) {
         if (restriction.type().equals(RestrictionType.LOCKED_VALUE))
             return !isLocked() || Objects.equals(restriction.value(), getValue());
@@ -59,6 +62,7 @@ public abstract class Value<T> {
         return true;
     }
 
+    @Override
     public boolean isLocked() {
         return restrictions.stream().anyMatch(restriction -> restriction.isType(RestrictionType.LOCKED_VALUE));
     }

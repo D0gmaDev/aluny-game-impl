@@ -1,16 +1,10 @@
 package fr.aluny.gameimpl.value;
 
-import fr.aluny.gameapi.value.BooleanValue;
-import fr.aluny.gameapi.value.EnumValue;
-import fr.aluny.gameapi.value.NumericValue;
-import fr.aluny.gameapi.value.StringValue;
-import fr.aluny.gameapi.value.TimeValue;
 import fr.aluny.gameapi.value.ValueService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import org.bukkit.Bukkit;
 
@@ -25,28 +19,28 @@ public class ValueServiceImpl implements ValueService {
     @SuppressWarnings("unchecked")
     @Override
     public <T extends Number & Comparable<T>> NumericValueImpl<T> registerNumericValue(String key, String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
-        return (NumericValueImpl<T>) NUMERIC_MAP.registerValueIfAbsent(key, () -> createNumericValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep));
+        return (NumericValueImpl<T>) NUMERIC_MAP.registerValue(key, createNumericValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep));
     }
 
     @Override
     public BooleanValueImpl registerBooleanValue(String key, String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
-        return BOOLEAN_MAP.registerValueIfAbsent(key, () -> createBooleanValue(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue));
+        return BOOLEAN_MAP.registerValue(key, createBooleanValue(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue));
     }
 
     @Override
     public TimeValueImpl registerTimeValue(String key, String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
-        return TIME_MAP.registerValueIfAbsent(key, () -> createTimeValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit));
+        return TIME_MAP.registerValue(key, createTimeValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit));
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T extends Enum<T>> EnumValueImpl<T> registerEnumValue(String key, String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
-        return (EnumValueImpl<T>) ENUM_MAP.registerValueIfAbsent(key, () -> createEnumValue(nameKey, enumerationClass, defaultValue, descriptionKeys));
+        return (EnumValueImpl<T>) ENUM_MAP.registerValue(key, createEnumValue(nameKey, enumerationClass, defaultValue, descriptionKeys));
     }
 
     @Override
     public StringValueImpl registerStringValue(String key, String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
-        return STRING_MAP.registerValueIfAbsent(key, () -> createStringValue(nameKey, descriptionKey, defaultValue, minLength, maxLength));
+        return STRING_MAP.registerValue(key, createStringValue(nameKey, descriptionKey, defaultValue, minLength, maxLength));
     }
 
     @Override
@@ -76,9 +70,9 @@ public class ValueServiceImpl implements ValueService {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Number & Comparable<T>> Optional<NumericValue<T>> getNumericValue(Class<T> numericType, String key) {
+    public <T extends Number & Comparable<T>> Optional<NumericValueImpl<T>> getNumericValue(Class<T> numericType, String key) {
         try {
-            return Optional.ofNullable(NUMERIC_MAP.get(key)).filter(numericValue -> numericType.isInstance(numericValue.getValue())).map(numericValue -> (NumericValueImpl<T>) numericValue);
+            return Optional.ofNullable(NUMERIC_MAP.getValue(key)).filter(numericValue -> numericType.isInstance(numericValue.getValue())).map(numericValue -> (NumericValueImpl<T>) numericValue);
         } catch (ClassCastException ex) {
             Bukkit.getLogger().log(Level.SEVERE, "Tried to cast a NumericValueImpl to a different type!", ex);
             return Optional.empty();
@@ -86,20 +80,20 @@ public class ValueServiceImpl implements ValueService {
     }
 
     @Override
-    public Optional<BooleanValue> getBooleanValue(String key) {
-        return Optional.ofNullable(BOOLEAN_MAP.get(key));
+    public Optional<BooleanValueImpl> getBooleanValue(String key) {
+        return Optional.ofNullable(BOOLEAN_MAP.getValue(key));
     }
 
     @Override
-    public Optional<TimeValue> getTimeValue(String key) {
-        return Optional.ofNullable(TIME_MAP.get(key));
+    public Optional<TimeValueImpl> getTimeValue(String key) {
+        return Optional.ofNullable(TIME_MAP.getValue(key));
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends Enum<T>> Optional<EnumValue<T>> getEnumValue(Class<T> enumClass, String key) {
+    public <T extends Enum<T>> Optional<EnumValueImpl<T>> getEnumValue(Class<T> enumClass, String key) {
         try {
-            return Optional.ofNullable(ENUM_MAP.get(key)).filter(enumValue -> enumClass.isInstance(enumValue.getValue())).map(enumValue -> (EnumValueImpl<T>) enumValue);
+            return Optional.ofNullable(ENUM_MAP.getValue(key)).filter(enumValue -> enumClass.isInstance(enumValue.getValue())).map(enumValue -> (EnumValueImpl<T>) enumValue);
         } catch (ClassCastException ex) {
             Bukkit.getLogger().log(Level.SEVERE, "Tried to cast an EnumValueImpl to a different type!", ex);
             return Optional.empty();
@@ -107,8 +101,8 @@ public class ValueServiceImpl implements ValueService {
     }
 
     @Override
-    public Optional<StringValue> getStringValue(String key) {
-        return Optional.ofNullable(STRING_MAP.get(key));
+    public Optional<StringValueImpl> getStringValue(String key) {
+        return Optional.ofNullable(STRING_MAP.getValue(key));
     }
 
     @Override
@@ -124,18 +118,12 @@ public class ValueServiceImpl implements ValueService {
 
         private final Map<String, T> values = new HashMap<>();
 
-        public T registerValueIfAbsent(String key, Supplier<T> instantiation) {
-            if (values.containsKey(key)) {
-                return values.get(key);
-            }
-
-            T value = instantiation.get();
+        public T registerValue(String key, T value) {
             values.put(key, value);
-
             return value;
         }
 
-        public T get(String key) {
+        public T getValue(String key) {
             return values.get(key);
         }
 

@@ -5,7 +5,7 @@ import fr.aluny.gameapi.value.ValueRestriction;
 import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
 import java.util.Objects;
 
-public class BooleanValueImpl extends Value<Boolean> implements BooleanValue {
+public final class BooleanValueImpl extends Value<Boolean> implements BooleanValue {
 
     private final String  nameKey;
     private final String  trueDescriptionKey;
