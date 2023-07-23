@@ -6,12 +6,21 @@ import fr.aluny.gameapi.value.ValueRestriction;
 import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
 import java.text.DecimalFormat;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @SuppressWarnings("unchecked")
-public class NumericValueImpl<T extends Number> extends Value<T> implements NumericValue<T> {
+public sealed class NumericValueImpl<T extends Number & Comparable<T>> extends Value<T> implements NumericValue<T> permits TimeValueImpl {
 
     private static final DecimalFormat DOUBLE_DECIMAL = new DecimalFormat("#.##");
+
+    private static final Map<Class<? extends Number>, Operations<?>> OPERATIONS = Map.of(
+            Integer.class, new Operations<>(Integer::sum, (a, b) -> a - b, i -> Integer.toString(i)),
+            Long.class, new Operations<>(Long::sum, (a, b) -> a - b, l -> Long.toString(l)),
+            Double.class, new Operations<>(Double::sum, (a, b) -> a - b, DOUBLE_DECIMAL::format),
+            Float.class, new Operations<>(Float::sum, (a, b) -> a - b, DOUBLE_DECIMAL::format)
+    );
 
     private final String nameKey;
     private final String descriptionKey;
@@ -26,19 +35,19 @@ public class NumericValueImpl<T extends Number> extends Value<T> implements Nume
     private T value;
 
     public NumericValueImpl(String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
-        this.nameKey = nameKey;
+        this.nameKey = Objects.requireNonNull(nameKey);
         this.descriptionKey = descriptionKey;
-        this.defaultMaxValue = maxValue;
-        this.defaultMinValue = minValue;
-        this.smallStep = smallStep;
-        this.mediumStep = mediumStem;
-        this.largeStep = largeStep;
+        this.defaultMaxValue = Objects.requireNonNull(maxValue);
+        this.defaultMinValue = Objects.requireNonNull(minValue);
+        this.smallStep = Objects.requireNonNull(smallStep);
+        this.mediumStep = Objects.requireNonNull(mediumStem);
+        this.largeStep = Objects.requireNonNull(largeStep);
 
-        this.defaultValue = defaultValue;
+        this.defaultValue = Objects.requireNonNull(defaultValue);
         this.value = defaultValue;
 
-        addRestriction("default", RestrictionType.MINIMAL_VALUE, minValue);
-        addRestriction("default", RestrictionType.MAXIMAL_VALUE, maxValue);
+        addRestriction(RestrictionType.MINIMAL_VALUE, minValue);
+        addRestriction(RestrictionType.MAXIMAL_VALUE, maxValue);
     }
 
     @Override
@@ -48,31 +57,21 @@ public class NumericValueImpl<T extends Number> extends Value<T> implements Nume
 
     @Override
     public String getStringValue() {
-        if (getValue() instanceof Integer integerValue) {
-            return Integer.toString(integerValue);
-        } else if (getValue() instanceof Long longValue) {
-            return Long.toString(longValue);
-        } else if (getValue() instanceof Double doubleValue) {
-            return DOUBLE_DECIMAL.format(doubleValue);
-        } else if (getValue() instanceof Float floatValue) {
-            return DOUBLE_DECIMAL.format(floatValue);
-        }
-
-        return getValue().toString();
+        return Optional.ofNullable(OPERATIONS.get(getValue().getClass()))
+                .map(operations -> (Operations<T>) operations).map(Operations::toStringOperation)
+                .orElse(Object::toString).toString(getValue());
     }
 
     @Override
     public T getMaxValue() {
         return getRestrictions().stream().filter(restriction -> restriction.isType(RestrictionType.MAXIMAL_VALUE))
-                .min(Comparator.comparingDouble(restriction -> restriction.getValue().doubleValue()))
-                .map(ValueRestriction::getValue).orElse(this.defaultMaxValue);
+                .map(ValueRestriction::value).min(Comparator.naturalOrder()).orElse(this.defaultMaxValue);
     }
 
     @Override
     public T getMinValue() {
         return getRestrictions().stream().filter(restriction -> restriction.isType(RestrictionType.MINIMAL_VALUE))
-                .max(Comparator.comparingDouble(restriction -> restriction.getValue().doubleValue()))
-                .map(ValueRestriction::getValue).orElse(this.defaultMinValue);
+                .map(ValueRestriction::value).max(Comparator.naturalOrder()).orElse(this.defaultMinValue);
     }
 
     @Override
@@ -132,6 +131,8 @@ public class NumericValueImpl<T extends Number> extends Value<T> implements Nume
 
     @Override
     public void setValue(T value) {
+        Objects.requireNonNull(value);
+
         T minValue = getMinValue();
         T maxValue = getMaxValue();
         if (isInferior(value, minValue))
@@ -155,65 +156,29 @@ public class NumericValueImpl<T extends Number> extends Value<T> implements Nume
     }
 
     private boolean isSuperior(T a, T b) {
-        if (a instanceof Integer) {
-            return a.intValue() > b.intValue();
-        } else if (a instanceof Double) {
-            return a.doubleValue() > b.doubleValue();
-        } else if (a instanceof Float) {
-            return a.floatValue() > b.floatValue();
-        } else if (a instanceof Long) {
-            return a.longValue() > b.longValue();
-        } else {
-            throw new UnsupportedOperationException("Cannot compare " + a.getClass().getName() + " types !");
-        }
+        return a.compareTo(b) > 0;
     }
 
     private boolean isInferior(T a, T b) {
-        if (a instanceof Integer) {
-            return a.intValue() < b.intValue();
-        } else if (a instanceof Double) {
-            return a.doubleValue() < b.doubleValue();
-        } else if (a instanceof Float) {
-            return a.floatValue() < b.floatValue();
-        } else if (a instanceof Long) {
-            return a.longValue() < b.longValue();
-        } else {
-            throw new UnsupportedOperationException("Cannot compare " + a.getClass().getName() + " types !");
-        }
+        return a.compareTo(b) < 0;
     }
 
     private T add(T a, T b) {
-        T total;
-        if (a instanceof Integer) {
-            total = (T) ((Integer) (a.intValue() + b.intValue()));
-        } else if (a instanceof Double) {
-            total = (T) ((Double) (a.doubleValue() + b.doubleValue()));
-        } else if (a instanceof Float) {
-            total = (T) ((Float) (a.floatValue() + b.floatValue()));
-        } else if (a instanceof Long) {
-            total = (T) ((Long) (a.longValue() + b.longValue()));
-        } else {
-            throw new UnsupportedOperationException("Cannot add " + a.getClass().getName() + " types !");
-        }
+        Operations<T> operation = (Operations<T>) OPERATIONS.get(a.getClass());
 
-        return total;
+        if (operation == null)
+            throw new UnsupportedOperationException("Cannot add " + a.getClass().getName() + " types !");
+
+        return operation.addOperation().add(a, b);
     }
 
     private T subtract(T a, T b) {
-        T total;
-        if (a instanceof Integer) {
-            total = (T) ((Integer) (a.intValue() - b.intValue()));
-        } else if (a instanceof Double) {
-            total = (T) ((Double) (a.doubleValue() - b.doubleValue()));
-        } else if (a instanceof Float) {
-            total = (T) ((Float) (a.floatValue() - b.floatValue()));
-        } else if (a instanceof Long) {
-            total = (T) ((Long) (a.longValue() - b.longValue()));
-        } else {
-            throw new UnsupportedOperationException("Cannot subtract " + a.getClass().getName() + " types !");
-        }
+        Operations<T> operation = (Operations<T>) OPERATIONS.get(a.getClass());
 
-        return total;
+        if (operation == null)
+            throw new UnsupportedOperationException("Cannot add " + a.getClass().getName() + " types !");
+
+        return operation.removeOperation().remove(a, b);
     }
 
     @Override
@@ -222,12 +187,48 @@ public class NumericValueImpl<T extends Number> extends Value<T> implements Nume
     }
 
     @Override
-    public void addRestriction(String key, ValueRestriction<T> restriction) {
-        super.addRestriction(key, restriction);
-        if (restriction.isType(RestrictionType.LOCKED_VALUE) && !restriction.getValue().equals(getValue())) {
-            setValue(restriction.getValue());
+    public boolean canApply(ValueRestriction<T> restriction) {
+        boolean unlocked = super.canApply(restriction);
+
+        if (!unlocked)
+            return false;
+
+        return restriction.isType(RestrictionType.MINIMAL_VALUE) && restriction.value().compareTo(getMaxValue()) <= 0 ||
+                restriction.isType(RestrictionType.MAXIMAL_VALUE) && restriction.value().compareTo(getMinValue()) >= 0;
+    }
+
+    @Override
+    public void addRestriction(ValueRestriction<T> restriction) {
+        super.addRestriction(restriction);
+
+        if (restriction.isType(RestrictionType.LOCKED_VALUE) && !restriction.value().equals(getValue())) {
+            setValue(restriction.value());
             return;
         }
         setValue(getValue());
+    }
+
+    private interface AddOperation<N> {
+
+        N add(N n1, N n2);
+    }
+
+    private interface RemoveOperation<N> {
+
+        N remove(N n1, N n2);
+    }
+
+    private interface ToStringOperation<N> {
+
+        String toString(N n);
+    }
+
+    private record Operations<N>(AddOperation<N> addOperation, RemoveOperation<N> removeOperation, ToStringOperation<N> toStringOperation) {
+
+    }
+
+    @Override
+    public String toString() {
+        return "NumericValue<" + value.getClass().getSimpleName() + ">(" + getStringValue() + ')';
     }
 }

@@ -1,12 +1,12 @@
 package fr.aluny.gameimpl.value;
 
-import com.google.common.base.Preconditions;
 import fr.aluny.gameapi.value.EnumValue;
 import fr.aluny.gameapi.value.ValueRestriction;
 import fr.aluny.gameapi.value.ValueRestriction.RestrictionType;
 import java.util.Arrays;
+import java.util.Objects;
 
-public class EnumValueImpl<T extends Enum<T>> extends Value<T> implements EnumValue<T> {
+public final class EnumValueImpl<T extends Enum<T>> extends Value<T> implements EnumValue<T> {
 
     private final String   nameKey;
     private final String[] descriptionKeys;
@@ -16,9 +16,10 @@ public class EnumValueImpl<T extends Enum<T>> extends Value<T> implements EnumVa
     private int valueIndex;
 
     public EnumValueImpl(String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
-        Preconditions.checkState(enumerationClass.getEnumConstants().length == descriptionKeys.length, "descriptionKeys length must be the same as enumerationClass one !");
+        if (enumerationClass.getEnumConstants().length != descriptionKeys.length)
+            throw new IllegalArgumentException("descriptionKeys and enumeration must share the same length.");
 
-        this.nameKey = nameKey;
+        this.nameKey = Objects.requireNonNull(nameKey);
         this.enumeration = enumerationClass.getEnumConstants();
         this.valueIndex = Arrays.asList(this.enumeration).indexOf(defaultValue);
         this.defaultValueIndex = this.valueIndex;
@@ -100,9 +101,15 @@ public class EnumValueImpl<T extends Enum<T>> extends Value<T> implements EnumVa
     }
 
     @Override
-    public void addRestriction(String key, ValueRestriction<T> restriction) {
-        super.addRestriction(key, restriction);
-        if (restriction.isType(RestrictionType.LOCKED_VALUE) && getValue() != restriction.getValue())
-            setValue(restriction.getValue());
+    public void addRestriction(ValueRestriction<T> restriction) {
+        super.addRestriction(restriction);
+
+        if (restriction.isType(RestrictionType.LOCKED_VALUE) && restriction.value() != getValue())
+            setValue(restriction.value());
+    }
+
+    @Override
+    public String toString() {
+        return "EnumValue<" + enumeration.getClass().getSimpleName() + ">(" + getValue().name() + ')';
     }
 }

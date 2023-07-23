@@ -1,18 +1,10 @@
 package fr.aluny.gameimpl.value;
 
-import fr.aluny.gameapi.value.BooleanValue;
-import fr.aluny.gameapi.value.EnumValue;
-import fr.aluny.gameapi.value.NumericValue;
-import fr.aluny.gameapi.value.StringValue;
-import fr.aluny.gameapi.value.TimeValue;
 import fr.aluny.gameapi.value.ValueService;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import org.bukkit.Bukkit;
 
 public class ValueServiceImpl implements ValueService {
 
@@ -22,93 +14,79 @@ public class ValueServiceImpl implements ValueService {
     private static final ValueMap<EnumValueImpl<?>>                   ENUM_MAP    = new ValueMap<>();
     private static final ValueMap<StringValueImpl>                    STRING_MAP  = new ValueMap<>();
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T extends Number> NumericValueImpl<T> createNumericValue(String key, String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
-        return (NumericValueImpl<T>) NUMERIC_MAP.createValueOrReset(key, () -> createUnregisteredNumericValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep));
+    public <T extends Number & Comparable<T>> NumericValueImpl<T> registerNumericValue(String key, String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
+        return NUMERIC_MAP.registerUnsafeValue(key, createNumericValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep));
     }
 
     @Override
-    public BooleanValueImpl createBooleanValue(String key, String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
-        return BOOLEAN_MAP.createValueOrReset(key, () -> createUnregisteredBooleanValue(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue));
+    public BooleanValueImpl registerBooleanValue(String key, String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
+        return BOOLEAN_MAP.registerValue(key, createBooleanValue(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue));
     }
 
     @Override
-    public TimeValueImpl createTimeValue(String key, String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
-        return TIME_MAP.createValueOrReset(key, () -> createUnregisteredTimeValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit));
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends Enum<T>> EnumValueImpl<T> createEnumValue(String key, String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
-        return (EnumValueImpl<T>) ENUM_MAP.createValueOrReset(key, () -> createUnregisteredEnumValue(nameKey, enumerationClass, defaultValue, descriptionKeys));
+    public TimeValueImpl registerTimeValue(String key, String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
+        return TIME_MAP.registerValue(key, createTimeValue(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit));
     }
 
     @Override
-    public StringValueImpl createStringValue(String key, String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
-        return STRING_MAP.createValueOrReset(key, () -> createUnregisteredStringValue(nameKey, descriptionKey, defaultValue, minLength, maxLength));
+    public <T extends Enum<T>> EnumValueImpl<T> registerEnumValue(String key, String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
+        return ENUM_MAP.registerUnsafeValue(key, createEnumValue(nameKey, enumerationClass, defaultValue, descriptionKeys));
     }
 
     @Override
-    public <T extends Number> NumericValueImpl<T> createUnregisteredNumericValue(String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
+    public StringValueImpl registerStringValue(String key, String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
+        return STRING_MAP.registerValue(key, createStringValue(nameKey, descriptionKey, defaultValue, minLength, maxLength));
+    }
+
+    @Override
+    public <T extends Number & Comparable<T>> NumericValueImpl<T> createNumericValue(String nameKey, String descriptionKey, T defaultValue, T minValue, T maxValue, T smallStep, T mediumStem, T largeStep) {
         return new NumericValueImpl<>(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep);
     }
 
     @Override
-    public BooleanValueImpl createUnregisteredBooleanValue(String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
+    public BooleanValueImpl createBooleanValue(String nameKey, String trueDescriptionKey, String falseDescriptionKey, boolean defaultValue) {
         return new BooleanValueImpl(nameKey, trueDescriptionKey, falseDescriptionKey, defaultValue);
     }
 
     @Override
-    public TimeValueImpl createUnregisteredTimeValue(String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
+    public TimeValueImpl createTimeValue(String nameKey, String descriptionKey, long defaultValue, long minValue, long maxValue, long smallStep, long mediumStem, long largeStep, TimeUnit timeUnit) {
         return new TimeValueImpl(nameKey, descriptionKey, defaultValue, minValue, maxValue, smallStep, mediumStem, largeStep, timeUnit);
     }
 
     @Override
-    public <T extends Enum<T>> EnumValueImpl<T> createUnregisteredEnumValue(String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
+    public <T extends Enum<T>> EnumValueImpl<T> createEnumValue(String nameKey, Class<T> enumerationClass, T defaultValue, String... descriptionKeys) {
         return new EnumValueImpl<>(nameKey, enumerationClass, defaultValue, descriptionKeys);
     }
 
     @Override
-    public StringValueImpl createUnregisteredStringValue(String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
+    public StringValueImpl createStringValue(String nameKey, String descriptionKey, String defaultValue, int minLength, int maxLength) {
         return new StringValueImpl(nameKey, descriptionKey, defaultValue, minLength, maxLength);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public <T extends Number> Optional<NumericValue<T>> getNumericValue(String key) {
-        try {
-            return Optional.ofNullable((NumericValueImpl<T>) NUMERIC_MAP.get(key));
-        } catch (ClassCastException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "Tried to cast a NumericValueImpl to a different type!", ex);
-            return Optional.empty();
-        }
+    public <T extends Number & Comparable<T>> Optional<NumericValueImpl<T>> getNumericValue(Class<T> numericType, String key) {
+        return Optional.ofNullable(NUMERIC_MAP.getUnsafeValue(key));
     }
 
     @Override
-    public Optional<BooleanValue> getBooleanValue(String key) {
-        return Optional.ofNullable(BOOLEAN_MAP.get(key));
+    public Optional<BooleanValueImpl> getBooleanValue(String key) {
+        return Optional.ofNullable(BOOLEAN_MAP.getValue(key));
     }
 
     @Override
-    public Optional<TimeValue> getTimeValue(String key) {
-        return Optional.ofNullable(TIME_MAP.get(key));
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T extends Enum<T>> Optional<EnumValue<T>> getEnumValue(String key) {
-        try {
-            return Optional.ofNullable((EnumValueImpl<T>) ENUM_MAP.get(key));
-        } catch (ClassCastException ex) {
-            Bukkit.getLogger().log(Level.SEVERE, "Tried to cast an EnumValueImpl to a different type!", ex);
-            return Optional.empty();
-        }
+    public Optional<TimeValueImpl> getTimeValue(String key) {
+        return Optional.ofNullable(TIME_MAP.getValue(key));
     }
 
     @Override
-    public Optional<StringValue> getStringValue(String key) {
-        return Optional.ofNullable(STRING_MAP.get(key));
+    public <T extends Enum<T>> Optional<EnumValueImpl<T>> getEnumValue(Class<T> enumClass, String key) {
+        return Optional.ofNullable(ENUM_MAP.getUnsafeValue(key));
+    }
+
+    @Override
+    public Optional<StringValueImpl> getStringValue(String key) {
+        return Optional.ofNullable(STRING_MAP.getValue(key));
     }
 
     @Override
@@ -124,22 +102,23 @@ public class ValueServiceImpl implements ValueService {
 
         private final Map<String, T> values = new HashMap<>();
 
-        public T createValueOrReset(String key, Supplier<T> instantiation) {
-            if (values.containsKey(key)) {
-                T value = values.get(key);
-
-                value.reset();
-                return value;
-            }
-
-            T value = instantiation.get();
+        public T registerValue(String key, T value) {
             values.put(key, value);
-
             return value;
         }
 
-        public T get(String key) {
+        @SuppressWarnings("unchecked")
+        public <U extends T> U registerUnsafeValue(String key, T value) {
+            return (U) registerValue(key, value);
+        }
+
+        public T getValue(String key) {
             return values.get(key);
+        }
+
+        @SuppressWarnings("unchecked")
+        public <U extends T> U getUnsafeValue(String key) {
+            return (U) getValue(key);
         }
 
         public Optional<T> remove(String key) {
