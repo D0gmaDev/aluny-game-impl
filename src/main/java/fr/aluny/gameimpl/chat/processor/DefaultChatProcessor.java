@@ -9,7 +9,6 @@ import fr.aluny.gameapi.translation.TranslationService;
 import fr.aluny.gameimpl.player.GamePlayerImpl;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
-import org.bukkit.Bukkit;
 
 public class DefaultChatProcessor implements ChatProcessor {
 
@@ -34,12 +33,11 @@ public class DefaultChatProcessor implements ChatProcessor {
         Component prefix = Component.text(highestRank.getPrefix(), highestRank.getTextColor());
         Component name = Component.text(processedChat.getSender().getPlayerName(), highestRank.getTextColor());
 
-        Bukkit.getOnlinePlayers().forEach(player -> player.sendMessage(MessageService.COMPONENT_PARSER.deserialize(this.chatFormat,
+        Component component = MessageService.COMPONENT_PARSER.deserialize(this.chatFormat,
                 Placeholder.component("prefix", prefix),
                 Placeholder.component("name", name),
-                Placeholder.component("message", processedChat.getMessageContentForPlayer(player.getUniqueId()))
-        )));
+                Placeholder.component("message", processedChat.getMessage()));
 
-        Bukkit.getLogger().info("[CHAT] " + processedChat.getSender().getPlayerName() + ": " + processedChat.getMessageContent().content());
+        processedChat.setRenderer((source, sourceDisplayName, message, viewer) -> component);
     }
 }
