@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import net.kyori.adventure.text.Component;
 
 public class ChatServiceImpl implements ChatService {
 
@@ -127,12 +126,13 @@ public class ChatServiceImpl implements ChatService {
         char prefix = messageContent.charAt(0);
 
         if (this.chatPreProcessors.containsKey(prefix) || this.chatProcessors.containsKey(prefix)) {
-            event.message(Component.text(messageContent.substring(1)));
-
             if (messageContent.length() < 2) {
                 event.setCancelled(true);
                 return;
             }
+
+            String prefixString = String.valueOf(prefix);
+            event.message(event.message().replaceText(builder -> builder.matchLiteral(prefixString).once().replacement("")));
         } else {
             prefix = DEFAULT_PREFIX;
         }
