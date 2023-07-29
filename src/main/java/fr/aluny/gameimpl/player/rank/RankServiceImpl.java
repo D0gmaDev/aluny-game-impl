@@ -46,7 +46,8 @@ public class RankServiceImpl implements RankService {
 
     @Override
     public void initialize() {
-        List<Rank> ranks = rankAPI.loadAllRanks().stream().sorted(Comparator.comparingInt(Rank::getImportanceIndex).reversed()).toList();
+        Comparator<Rank> rankComparator = Comparator.comparingInt(Rank::getImportanceIndex).reversed();
+        List<Rank> ranks = rankAPI.loadAllRanks().stream().sorted(rankComparator).toList();
 
         int offset = 0;
         for (Rank rank : ranks) {

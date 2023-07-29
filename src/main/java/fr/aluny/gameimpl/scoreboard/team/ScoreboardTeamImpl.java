@@ -68,6 +68,9 @@ public class ScoreboardTeamImpl implements ScoreboardTeam {
 
     @Override
     public void addPlayer(GamePlayer player) {
+        // first remove the player from his previous team, if any
+        player.getScoreboardTeam().ifPresent(previousTeam -> previousTeam.removePlayer(player));
+
         this.players.add(player);
         this.team.addEntity(player.getPlayer());
 
@@ -95,7 +98,7 @@ public class ScoreboardTeamImpl implements ScoreboardTeam {
 
     @Override
     public boolean hasPlayer(GamePlayer player) {
-        return this.team.hasEntity(player.getPlayer());
+        return this.players.contains(player);
     }
 
     @Override

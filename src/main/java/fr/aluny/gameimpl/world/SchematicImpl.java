@@ -4,6 +4,7 @@ import fr.aluny.gameapi.world.Axis;
 import fr.aluny.gameapi.world.Schematic;
 import fr.aluny.gameapi.world.SchematicPasteSpec;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.function.Consumer;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -12,6 +13,15 @@ import org.bukkit.block.structure.StructureRotation;
 import org.bukkit.entity.Entity;
 
 public record SchematicImpl(int version, short height, short width, short length, SchematicBlockData[] blocksData, SchematicEntityData[] entitiesData, short[] blocks, int airData) implements Schematic {
+
+    public SchematicImpl {
+        if (height <= 0 || width <= 0 || length <= 0)
+            throw new IllegalArgumentException("non-positive schematic dimension");
+
+        Objects.requireNonNull(blocksData);
+        Objects.requireNonNull(entitiesData);
+        Objects.requireNonNull(blocks);
+    }
 
     @Override
     public void paste(Location location) {
