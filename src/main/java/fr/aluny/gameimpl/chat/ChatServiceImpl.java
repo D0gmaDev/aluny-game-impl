@@ -5,17 +5,17 @@ import fr.aluny.gameapi.chat.ChatPreProcessor;
 import fr.aluny.gameapi.chat.ChatProcessor;
 import fr.aluny.gameapi.chat.ChatService;
 import fr.aluny.gameapi.chat.ProcessedChat;
+import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameimpl.chat.processor.ChatColorPreProcessor;
 import fr.aluny.gameimpl.chat.processor.DefaultChatProcessor;
 import fr.aluny.gameimpl.chat.processor.MutePreProcessor;
+import io.papermc.paper.event.player.AsyncChatEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import net.kyori.adventure.text.TextComponent;
-import org.bukkit.entity.Player;
 
 public class ChatServiceImpl implements ChatService {
 
@@ -122,27 +122,35 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
-    public void acceptProcess(Player player, TextComponent message) {
-        char prefix = message.content().charAt(0);
+    public void acceptProcess(GamePlayer sender, AsyncChatEvent event, String messageContent) {
+        char prefix = messageContent.charAt(0);
 
         if (this.chatPreProcessors.containsKey(prefix) || this.chatProcessors.containsKey(prefix)) {
-            message = message.content(message.content().substring(1));
-
-            if (message.content().isBlank())
+            if (messageContent.length() < 2) {
+                event.setCancelled(true);
                 return;
+            }
+
+            String prefixString = String.valueOf(prefix);
+            event.message(event.message().replaceText(builder -> builder.matchLiteral(prefixString).once().replacement("")));
         } else {
             prefix = DEFAULT_PREFIX;
         }
 
-        ProcessedChat processedChat = new ProcessedChat(serviceManager.getGamePlayerService().getPlayer(player), message);
+        ProcessedChat processedChat = new ProcessedChat(sender, event.viewers(), event.message());
 
         acceptPreProcess(prefix, processedChat);
 
-        if (processedChat.isCancelled())
+        if (processedChat.isCancelled()) {
+            event.setCancelled(true);
             return;
+        }
 
         if (chatProcessors.containsKey(prefix))
             chatProcessors.get(prefix).accept(processedChat);
+
+        event.setCancelled(processedChat.isCancelled());
+        event.renderer(processedChat.getRenderer());
     }
 
     @Override

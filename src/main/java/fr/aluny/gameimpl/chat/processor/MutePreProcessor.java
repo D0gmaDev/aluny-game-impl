@@ -14,10 +14,10 @@ public class MutePreProcessor implements ChatPreProcessor {
     }
 
     @Override
-    public void accept(ProcessedChat chat) {
-        if (moderationService.isMuted(chat.getSender().getUuid())) {
-            chat.setCancelled(true);
-            chat.getSender().getMessageHandler().sendMessage("moderation_cancelled_muted", Formatter.date("date", moderationService.getUnMuteDate(chat.getSender().getUuid())));
+    public void accept(ProcessedChat processedChat) {
+        if (moderationService.isMuted(processedChat.getSender().getUuid())) {
+            processedChat.setCancelled(true);
+            processedChat.getSender().getMessageHandler().sendMessage("moderation_cancelled_muted", Formatter.date("date", moderationService.getUnMuteDate(processedChat.getSender().getUuid())));
         }
     }
 }
