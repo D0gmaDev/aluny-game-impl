@@ -33,16 +33,15 @@ public class ModerationServiceImpl implements fr.aluny.gameapi.moderation.Modera
         commandService.registerRuntimeCommand(new UnbanCommand(playerSanctionAPI, playerAPI, serviceManager));
         commandService.registerRuntimeCommand(new UnmuteCommand(playerSanctionAPI, playerAPI, serviceManager));
         commandService.registerRuntimeCommand(new CasierCommand(playerSanctionAPI, playerAPI, serviceManager));
-        commandService.registerRuntimeCommand(new InvseeCommand());
 
         commandService.registerRuntimeCommand(new DebugCommand(serviceManager));
     }
 
     @Override
     public boolean isMuted(UUID uuid) {
-        return this.playerAPI.getDetailedPlayer(uuid)
-                .map(account -> account.getCurrentSanctions().stream().anyMatch(sanction -> sanction.isType(SanctionType.MUTE) && sanction.isActive()))
-                .orElse(false);
+        return this.playerAPI.getDetailedPlayer(uuid).stream()
+                .flatMap(account -> account.getCurrentSanctions().stream())
+                .anyMatch(sanction -> sanction.isType(SanctionType.MUTE) && sanction.isActive());
     }
 
     @Override

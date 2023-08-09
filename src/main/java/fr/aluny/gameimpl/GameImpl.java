@@ -37,8 +37,16 @@ import fr.aluny.gameimpl.world.LootModifierServiceImpl;
 import fr.aluny.gameimpl.world.SchematicServiceImpl;
 import fr.aluny.gameimpl.world.VoidGenerator;
 import fr.aluny.gameimpl.world.anchor.AnchorServiceImpl;
+import java.io.BufferedReader;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.PluginManager;
@@ -161,6 +169,17 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         /* Services shutdown */
         if (isEnabled())
             serviceManager.shutdownServices();
+
+        Component kickComponent = Component.text("Server shutdown...", TextColor.color(120, 87, 41)).appendNewline().append(getRandomQuote());
+        Bukkit.getOnlinePlayers().forEach(player -> player.kick(kickComponent));
+    }
+
+    private Component getRandomQuote() {
+        return Optional.ofNullable(getTextResource("text/quotes.txt"))
+                .map(quotesResource -> new BufferedReader(quotesResource).lines().toList())
+                .filter(Predicate.not(List::isEmpty))
+                .map(quotes -> Component.text(quotes.get(new Random().nextInt(quotes.size())), NamedTextColor.GRAY, TextDecoration.ITALIC))
+                .orElse(Component.empty());
     }
 
     @Override
@@ -176,6 +195,22 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
     @Override
     public ServerSettings getServerSettings() {
         return Optional.ofNullable(this.serverSettings).orElseThrow(() -> new IllegalStateException("Game ServerSettings not initialized"));
+    }
+
+    public static void info(String message) {
+        plugin.getSLF4JLogger().info(message);
+    }
+
+    public static void warn(String message) {
+        plugin.getSLF4JLogger().warn(message);
+    }
+
+    public static void error(String message) {
+        plugin.getSLF4JLogger().error(message);
+    }
+
+    public static void error(String message, Throwable throwable) {
+        plugin.getSLF4JLogger().error(message, throwable);
     }
 
     public static JavaPlugin getPlugin() {

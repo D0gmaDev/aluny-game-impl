@@ -82,7 +82,7 @@ public final class EnumValueImpl<T extends Enum<T>> extends Value<T> implements 
 
     @Override
     public void setValue(T value) {
-        setIndexValue(Arrays.asList(this.enumeration).indexOf(value));
+        setIndexValue(value.ordinal());
     }
 
     @Override
