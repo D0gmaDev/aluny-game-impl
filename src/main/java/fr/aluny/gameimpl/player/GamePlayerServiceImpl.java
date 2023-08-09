@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 import org.bukkit.entity.Player;
 
 public class GamePlayerServiceImpl implements GamePlayerService {
@@ -54,5 +55,13 @@ public class GamePlayerServiceImpl implements GamePlayerService {
         }
 
         gamePlayerMap.put(player.getUniqueId(), new OfflineGamePlayerImpl(player));
+    }
+
+    public int getPlayersDataSize() {
+        return this.gamePlayerMap.size();
+    }
+
+    public void clearOfflinePlayersData() {
+        this.gamePlayerMap.values().removeIf(Predicate.not(OfflineGamePlayer::isOnline));
     }
 }

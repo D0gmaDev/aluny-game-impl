@@ -7,7 +7,6 @@ import fr.aluny.gameapi.service.ServiceManager;
 import fr.aluny.gameimpl.api.PlayerAPI;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,8 +17,9 @@ public class PlayerAccountServiceImpl implements PlayerAccountService {
     private final PlayerAPI      playerAPI;
     private final ServiceManager serviceManager;
 
-    public final Map<UUID, CachedAccount> cacheMap = new HashMap<>();
-    private      BukkitTask               cacheRemoveTask;
+    private final Map<UUID, CachedAccount> cacheMap = new HashMap<>();
+
+    private BukkitTask cacheRemoveTask;
 
     public PlayerAccountServiceImpl(PlayerAPI playerAPI, ServiceManager serviceManager) {
         this.playerAPI = playerAPI;
@@ -30,12 +30,8 @@ public class PlayerAccountServiceImpl implements PlayerAccountService {
     public void initialize() {
         this.cacheRemoveTask = serviceManager.getRunnableHelper().runTimerAsynchronously(() -> {
             Instant now = Instant.now();
-
-            List.copyOf(this.cacheMap.entrySet()).stream()
-                    .filter(entry -> entry.getValue().expirationTime().isBefore(now))
-                    .forEach(entry -> this.cacheMap.remove(entry.getKey()));
-
-        }, 20 * 5, 20 * 40);
+            this.cacheMap.values().removeIf(cachedAccount -> cachedAccount.expirationTime().isBefore(now));
+        }, 20 * 5, 20 * 30);
     }
 
     @Override
@@ -78,6 +74,14 @@ public class PlayerAccountServiceImpl implements PlayerAccountService {
     @Override
     public boolean isOnline(UUID uuid) {
         return getPlayerAccount(uuid).map(PlayerAccount::isOnline).orElse(false);
+    }
+
+    public int getCacheSize() {
+        return this.cacheMap.size();
+    }
+
+    public void clearCache() {
+        this.cacheMap.clear();
     }
 
     private PlayerAccount saveToCache(PlayerAccount playerAccount) {
