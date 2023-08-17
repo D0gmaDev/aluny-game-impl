@@ -55,7 +55,7 @@ final class CommandInvoker {
             for (int i = 1; i < method.getParameterCount(); i++) {
 
                 if (parameterTypes[i].isArray()) {
-                    arguments.add(Arrays.stream(args).skip(i - 1).toArray(String[]::new));
+                    arguments.add(Arrays.copyOfRange(args, i - 1, args.length));
                     break;
                 }
 

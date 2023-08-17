@@ -19,7 +19,6 @@ import fr.aluny.gameimpl.moderation.sanction.DetailedPlayerSanction;
 import fr.aluny.gameimpl.moderation.sanction.SanctionType;
 import java.time.Duration;
 import java.util.List;
-import java.util.stream.Collectors;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Formatter;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -65,7 +64,7 @@ public class CasierCommand extends Command {
 
         List<DetailedPlayerSanction> playerDetailedSanctions = playerSanctionAPI.getPlayerDetailedSanctions(playerAccount, 30, 0);
 
-        List<Item> items = playerDetailedSanctions.stream().sorted().map(sanction -> new AsyncItem(new ItemBuilder(Material.BOOK).setDisplayName("§7Chargement..."), () -> new ItemBuilder(getMaterial(sanction.getSanctionType()))
+        List<Item> items = playerDetailedSanctions.stream().sorted().<Item>map(sanction -> new AsyncItem(new ItemBuilder(Material.BOOK).setDisplayName("§7Chargement..."), () -> new ItemBuilder(getMaterial(sanction.getSanctionType()))
                 .setDisplayName(new Translation("casier_details_title", Placeholder.unparsed("type", sanction.getSanctionType().name()), id(sanction.getId())))
                 .addLoreLines(
                         new Translation("casier_reason", Placeholder.unparsed("reason", sanction.getDescription())),
@@ -74,7 +73,7 @@ public class CasierCommand extends Command {
                         new Translation("casier_duration", Placeholder.unparsed("duration", TimeUtils.format(Duration.between(sanction.getStartAt(), sanction.getEndAt())))))
                 .addLoreLines(" ")
                 .addLoreLines(new Translation("casier_state", Formatter.choice("state", sanction.isCanceled() ? 2 : (sanction.isActive() ? 0 : 1))))
-        )).collect(Collectors.toList());
+        )).toList();
 
         PagedGui<Item> gui = PagedGui.items().setStructure(9, 5, CASIER_STRUCTURE).addIngredient('h', headItem).setContent(items).build();
 

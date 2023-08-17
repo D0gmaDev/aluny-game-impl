@@ -7,7 +7,6 @@ import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameimpl.player.rank.RankImpl;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class RankAPI {
 
@@ -21,8 +20,8 @@ public class RankAPI {
         try {
 
             return apiInstance.getAll().stream()
-                    .map(rankDTO -> new RankImpl(rankDTO.getId(), rankDTO.getName(), rankDTO.getImportanceIndex(), rankDTO.getPrefix(), rankDTO.getColor(), rankDTO.getPermissions()))
-                    .collect(Collectors.toList());
+                    .<Rank>map(rankDTO -> new RankImpl(rankDTO.getId(), rankDTO.getName(), rankDTO.getImportanceIndex(), rankDTO.getPrefix(), rankDTO.getColor(), rankDTO.getPermissions()))
+                    .toList();
 
         } catch (ApiException e) {
             System.err.println("Exception when calling RankControllerApi#getAll");

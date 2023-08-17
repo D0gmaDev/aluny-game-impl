@@ -2,11 +2,12 @@ package fr.aluny.gameimpl.moderation.command;
 
 import fr.aluny.gameapi.command.Command;
 import fr.aluny.gameapi.command.CommandInfo;
-import fr.aluny.gameapi.command.Default;
 import fr.aluny.gameapi.command.SubCommand;
 import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.PlayerAccount;
+import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameapi.service.ServiceManager;
+import fr.aluny.gameimpl.player.GamePlayerImpl;
 import fr.aluny.gameimpl.player.GamePlayerServiceImpl;
 import fr.aluny.gameimpl.player.PlayerAccountServiceImpl;
 import net.kyori.adventure.text.Component;
@@ -22,11 +23,6 @@ public class DebugCommand extends Command {
 
     public DebugCommand(ServiceManager serviceManager) {
         this.serviceManager = serviceManager;
-    }
-
-    @Default
-    public void defaultContext(GamePlayer gamePlayer, String[] args) {
-
     }
 
     @SubCommand(name = "account")
@@ -73,6 +69,15 @@ public class DebugCommand extends Command {
     @SubCommand(name = "has_permission")
     public void playerPermissionContext(GamePlayer gamePlayer, PlayerAccount target, String permission, String[] args) {
         gamePlayer.getPlayer().sendMessage(Component.text(target.getName() + (target.hasPermission(permission) ? " a" : " n'a pas") + " la permission " + permission + "."));
+    }
+
+    @SubCommand(name = "update_cached_rank")
+    public void updateCachedRankContext(GamePlayer gamePlayer, GamePlayer target, String[] args) {
+        if (target instanceof GamePlayerImpl targetImpl) {
+            Rank highestRank = serviceManager.getPlayerAccountService().getPlayerAccount(targetImpl).getHighestRank();
+            targetImpl.setCachedHighestRank(highestRank);
+            gamePlayer.getPlayer().sendMessage(Component.text("Updated " + targetImpl.getPlayerName() + "'s cached rank to ").append(Component.text(highestRank.getName(), highestRank.getTextColor())));
+        }
     }
 
 }

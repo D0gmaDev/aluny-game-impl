@@ -114,19 +114,13 @@ public class CommandServiceImpl implements CommandService {
             }
 
             if (args.length > 0) {
-                List<SubCommandWrapper> validSubCommands = subCommands.stream().filter(subCommand -> subCommand.name.equalsIgnoreCase(args[0])).toList();
-                if (validSubCommands.size() == 0) {
-                    if (defaultMethod != null)
-                        invokeCommand(gamePlayer, command, defaultMethod, args);
-                } else
-                    validSubCommands.forEach(subCommand -> {
-                        if (subCommand.permission.equalsIgnoreCase("") || player.hasPermission(subCommand.permission)) {
-                            String[] newArgs = Arrays.stream(args).skip(1).toArray(String[]::new);
-                            invokeCommand(gamePlayer, command, subCommand.method, newArgs);
-                        } else {
-                            gamePlayer.getMessageHandler().sendMessage("command_validation_no_permission");
-                        }
-                    });
+                subCommands.stream().filter(subCommand -> subCommand.name.equalsIgnoreCase(args[0])).findAny().ifPresent(subCommand -> {
+                    if (subCommand.permission.isEmpty() || player.hasPermission(subCommand.permission)) {
+                        invokeCommand(gamePlayer, command, subCommand.method, Arrays.copyOfRange(args, 1, args.length));
+                    } else {
+                        gamePlayer.getMessageHandler().sendMessage("command_validation_no_permission");
+                    }
+                });
                 return true;
             }
 

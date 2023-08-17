@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
@@ -57,7 +56,7 @@ public class SetMessageHandler implements MessageHandler {
     public static class BroadcastMessageHandler extends SetMessageHandler {
 
         public BroadcastMessageHandler(GamePlayerService gamePlayerService) {
-            super(gamePlayerService, () -> Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).collect(Collectors.toList()));
+            super(gamePlayerService, () -> Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).toList());
         }
     }
 }

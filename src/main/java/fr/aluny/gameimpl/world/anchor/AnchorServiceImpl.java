@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
@@ -39,12 +38,12 @@ public class AnchorServiceImpl implements AnchorService {
 
     @Override
     public List<Anchor> findMany(String key) {
-        return sources.stream().map(anchorSource -> anchorSource.findMany(key)).flatMap(List::stream).collect(Collectors.toList());
+        return sources.stream().map(anchorSource -> anchorSource.findMany(key)).flatMap(List::stream).toList();
     }
 
     @Override
     public List<Anchor> findAll() {
-        return sources.stream().map(AnchorSource::findAll).flatMap(List::stream).collect(Collectors.toList());
+        return sources.stream().map(AnchorSource::findAll).flatMap(List::stream).toList();
     }
 
     public void addSource(AnchorSource source) {

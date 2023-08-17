@@ -49,7 +49,7 @@ public class ModerationServiceImpl implements fr.aluny.gameapi.moderation.Modera
         return this.playerAPI.getDetailedPlayer(uuid)
                 .flatMap(account -> account.getCurrentSanctions().stream()
                         .filter(sanction -> sanction.isType(SanctionType.MUTE) && sanction.isActive())
-                        .map(PlayerSanction::getEndAt).max(Comparator.comparingLong(OffsetDateTime::toEpochSecond)))
+                        .map(PlayerSanction::getEndAt).max(Comparator.naturalOrder()))
                 .orElse(OffsetDateTime.now());
     }
 }

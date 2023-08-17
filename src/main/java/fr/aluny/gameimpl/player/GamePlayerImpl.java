@@ -28,7 +28,7 @@ public class GamePlayerImpl implements GamePlayer {
     private       Scoreboard     scoreboard;
     private       boolean        vanished;
 
-    private final Rank cachedHighestRank;
+    private Rank cachedHighestRank;
 
     public GamePlayerImpl(Player player, PlayerAccount playerBean) {
         this.player = player;
@@ -229,5 +229,9 @@ public class GamePlayerImpl implements GamePlayer {
 
     public Rank getCachedHighestRank() {
         return this.cachedHighestRank;
+    }
+
+    public void setCachedHighestRank(Rank highestRank) {
+        this.cachedHighestRank = highestRank;
     }
 }

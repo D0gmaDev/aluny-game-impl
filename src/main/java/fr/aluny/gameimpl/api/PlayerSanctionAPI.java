@@ -15,7 +15,6 @@ import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class PlayerSanctionAPI {
 
@@ -67,7 +66,7 @@ public class PlayerSanctionAPI {
         try {
             List<PlayerSanctionDTO> resultList = apiInstance.getAll1(player.getUuid(), count, page);
 
-            return resultList.stream().map(result -> new PlayerSanction(result.getId().intValue(), result.getPlayerUuid(), getSanctionType(result.getType()), result.getCancelled().booleanValue(), result.getStartAt(), result.getEndAt())).collect(Collectors.toList());
+            return resultList.stream().map(result -> new PlayerSanction(result.getId().intValue(), result.getPlayerUuid(), getSanctionType(result.getType()), result.getCancelled().booleanValue(), result.getStartAt(), result.getEndAt())).toList();
 
         } catch (ApiException e) {
             System.err.println("Exception when calling PlayerSanctionControllerApi#getAll1");
@@ -82,7 +81,7 @@ public class PlayerSanctionAPI {
     public List<DetailedPlayerSanction> getPlayerDetailedSanctions(PlayerAccount player, int count, int page) {
         try {
             List<PlayerSanctionDetailsDTO> resultList = apiInstance.getDetails(player.getUuid(), count, page);
-            return resultList.stream().map(PlayerSanctionAPI::buildSanction).collect(Collectors.toList());
+            return resultList.stream().map(PlayerSanctionAPI::buildSanction).toList();
 
         } catch (ApiException e) {
             System.err.println("Exception when calling PlayerSanctionControllerApi#getDetails");

@@ -51,8 +51,8 @@ public class PlayerAPI {
         try {
 
             return apiInstance.searchPlayers(name).stream()
-                    .map(player -> new PlayerAccountImpl(player.getUuid(), player.getUsername(), player.getCurrentServerId(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt()))
-                    .collect(Collectors.toList());
+                    .<PlayerAccount>map(player -> new PlayerAccountImpl(player.getUuid(), player.getUsername(), player.getCurrentServerId(), parseLocale(player.getLocale()), parseRanks(player.getRankIds()), player.getCreatedAt()))
+                    .toList();
 
         } catch (ApiException e) {
             System.err.println("Exception when calling PlayerControllerApi#getPlayer");
