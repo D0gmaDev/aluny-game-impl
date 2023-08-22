@@ -13,6 +13,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
@@ -82,12 +86,13 @@ public class CommandServiceImpl implements CommandService {
 
     public class BukkitCommandWrapper extends BukkitCommand implements Listener {
 
-        private final Command                 command;
-        private final String                  defaultPermission;
-        private final Method                  defaultMethod;
-        private final Method                  tabCompleter;
-        private final List<SubCommandWrapper> subCommands;
-        private final boolean                 asyncCall;
+        private final Command command;
+        private final String  defaultPermission;
+        private final Method  defaultMethod;
+        private final Method  tabCompleter;
+        private final boolean asyncCall;
+
+        private final Map<String, SubCommandWrapper> subCommandsMap;
 
         BukkitCommandWrapper(Command command, String name, String[] aliases, String defaultPermission, Method defaultMethod, Method tabCompleter, List<SubCommandWrapper> subCommands, boolean asyncCall) {
             super(name, "", "", Arrays.asList(aliases));
@@ -97,8 +102,13 @@ public class CommandServiceImpl implements CommandService {
             this.defaultPermission = defaultPermission;
             this.defaultMethod = defaultMethod;
             this.tabCompleter = tabCompleter;
-            this.subCommands = subCommands;
             this.asyncCall = asyncCall;
+
+            this.subCommandsMap = toMap(subCommands);
+        }
+
+        private static Map<String, SubCommandWrapper> toMap(List<SubCommandWrapper> subCommands) {
+            return subCommands.stream().collect(Collectors.toUnmodifiableMap(subCommand -> subCommand.name().toLowerCase(), Function.identity()));
         }
 
         @Override
@@ -113,21 +123,27 @@ public class CommandServiceImpl implements CommandService {
                 return true;
             }
 
-            if (args.length > 0) {
-                subCommands.stream().filter(subCommand -> subCommand.name.equalsIgnoreCase(args[0])).findAny().ifPresent(subCommand -> {
-                    if (subCommand.permission.isEmpty() || player.hasPermission(subCommand.permission)) {
-                        invokeCommand(gamePlayer, command, subCommand.method, Arrays.copyOfRange(args, 1, args.length));
-                    } else {
-                        gamePlayer.getMessageHandler().sendMessage("command_validation_no_permission");
-                    }
-                });
-                return true;
-            }
+            Optional<String> subCommandName = args.length != 0 ? Optional.of(args[0].toLowerCase()) : Optional.empty();
 
-            if (defaultMethod != null)
-                invokeCommand(gamePlayer, command, defaultMethod, args);
+            subCommandName.map(subCommandsMap::get).ifPresentOrElse(
+                    subCommand -> executeSubCommand(subCommand, player, gamePlayer, Arrays.copyOfRange(args, 1, args.length)),
+                    () -> executeDefaultCommand(gamePlayer, args)
+            );
 
             return true;
+        }
+
+        private void executeDefaultCommand(GamePlayer gamePlayer, String[] args) {
+            if (defaultMethod != null)
+                invokeCommand(gamePlayer, command, defaultMethod, args);
+        }
+
+        private void executeSubCommand(SubCommandWrapper subCommand, Player player, GamePlayer gamePlayer, String[] args) {
+            if (subCommand.permission.isEmpty() || player.hasPermission(subCommand.permission)) {
+                invokeCommand(gamePlayer, command, subCommand.method, args);
+            } else {
+                gamePlayer.getMessageHandler().sendMessage("command_validation_no_permission");
+            }
         }
 
         private void invokeCommand(GamePlayer gamePlayer, Command command, Method method, String[] args) {
@@ -143,8 +159,8 @@ public class CommandServiceImpl implements CommandService {
             if (!(sender instanceof Player player))
                 return List.of();
 
-            if (args.length == 1 && this.subCommands.stream().anyMatch(SubCommandWrapper::suggest))
-                return this.subCommands.stream().filter(SubCommandWrapper::suggest).map(SubCommandWrapper::name).filter(name -> name.startsWith(args[args.length - 1])).toList();
+            if (args.length == 1 && this.subCommandsMap.values().stream().anyMatch(SubCommandWrapper::suggest))
+                return this.subCommandsMap.values().stream().filter(SubCommandWrapper::suggest).map(SubCommandWrapper::name).filter(name -> name.startsWith(args[args.length - 1])).toList();
 
             if (this.tabCompleter != null)
                 try {
