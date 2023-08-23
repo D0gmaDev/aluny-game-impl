@@ -19,7 +19,7 @@ final class CommandInvoker {
     private final Map<Class<?>, ArgumentParser> argumentParserMap = new HashMap<>();
 
     public CommandInvoker(ServiceManager serviceManager) {
-        argumentParserMap.put(String.class, new ArgumentParser(argument -> argument, null));
+        argumentParserMap.put(String.class, new ArgumentParser(String::toString, null));
         argumentParserMap.put(UUID.class, new ArgumentParser(UUID::fromString, "command_validation_not_a_uuid"));
         argumentParserMap.put(Long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));
         argumentParserMap.put(long.class, new ArgumentParser(Long::parseLong, "command_validation_not_an_integer"));

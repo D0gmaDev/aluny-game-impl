@@ -39,6 +39,7 @@ import fr.aluny.gameimpl.world.VoidGenerator;
 import fr.aluny.gameimpl.world.anchor.AnchorServiceImpl;
 import java.io.BufferedReader;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
@@ -51,6 +52,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import xyz.xenondevs.inventoryaccess.component.i18n.Languages;
 import xyz.xenondevs.invui.InvUI;
 
 public class GameImpl extends JavaPlugin implements IAlunyGame {
@@ -157,7 +159,8 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         VersionMatcherImpl.matchVersion();
 
         /* Translations */
-        translationService.loadTranslations(this, "fr-fr", "lang/fr.properties");
+        translationService.loadTranslations(this, Locale.FRANCE, "lang/fr.properties");
+        Languages.getInstance().setLanguageProvider(gamePlayerService::getCachedLocaleCode);
 
         logger.info("===============[ GAME ]===============");
         logger.info("          Game plugin enabled         ");
