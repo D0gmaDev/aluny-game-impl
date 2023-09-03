@@ -5,6 +5,7 @@ import fr.aluny.gameapi.player.GamePlayerService;
 import fr.aluny.gameapi.player.OfflineGamePlayer;
 import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.service.ServiceManager;
+import fr.aluny.gameapi.translation.Locale;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -55,6 +56,13 @@ public class GamePlayerServiceImpl implements GamePlayerService {
         }
 
         gamePlayerMap.put(player.getUniqueId(), new OfflineGamePlayerImpl(player));
+    }
+
+    public String getCachedLocaleCode(Player player) {
+        GamePlayer gamePlayer = getPlayer(player);
+        Locale locale = gamePlayer instanceof GamePlayerImpl gamePlayerImpl ? gamePlayerImpl.getCachedLocale()
+                : serviceManager.getPlayerAccountService().getPlayerAccount(gamePlayer).getLocale(); // accurate backup, but should not happen
+        return locale.getCode();
     }
 
     public int getPlayersDataSize() {

@@ -3,101 +3,45 @@ package fr.aluny.gameimpl.translation;
 import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameapi.translation.TranslationService;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
-import xyz.xenondevs.inventoryaccess.component.i18n.Languages;
 
 public class TranslationServiceImpl implements TranslationService {
 
-    private static final String DEFAULT_LOCALE_CODE = "fr-fr";
+    private static final java.util.Locale DEFAULT_LOCALE = java.util.Locale.FRANCE;
 
-    private final Map<String, LocaleImpl> locales = new HashMap<>();
+    private final Map<java.util.Locale, LocaleImpl> locales = new HashMap<>();
+
+    private final TranslationsLoader translationsLoader = new TranslationsLoader(this, DEFAULT_LOCALE, locales::get, locales::put);
 
     @Override
-    public void loadTranslations(JavaPlugin plugin, String code, String filePath) {
-        if (code == null)
-            code = DEFAULT_LOCALE_CODE;
+    public void loadTranslations(JavaPlugin plugin, java.util.Locale javaLocale, String filePath) {
 
-        Properties properties = new Properties();
-        try (InputStream langStream = plugin.getClass().getClassLoader().getResourceAsStream(filePath)) {
-            if (langStream == null)
-                throw new IOException("Language translation file stream is null");
+        java.util.Locale locale = javaLocale != null ? javaLocale : DEFAULT_LOCALE;
+        int translationsNumber = this.translationsLoader.loadTranslations(plugin, locale, filePath);
 
-            properties.load(new InputStreamReader(langStream, StandardCharsets.UTF_8));
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        Map<String, String> translations = properties.entrySet().stream().collect(Collectors.toMap(entry -> entry.getKey().toString(), this::sanitizeValue));
-
-        LocaleImpl locale = this.locales.get(code);
-
-        if (locale == null) {
-            locale = new LocaleImpl(code, code.equals(DEFAULT_LOCALE_CODE), this);
-            this.locales.put(code, locale);
-        }
-
-        locale.addTranslations(translations);
-
-        Languages.getInstance().setLanguageProvider(player -> DEFAULT_LOCALE_CODE); //todo change
-        Languages.getInstance().addLanguage(code, locale.getTranslations());
-
-        Bukkit.getLogger().info(String.format("Loaded %d translations from '%s' (%s) file of plugin %s.", translations.size(), filePath, code, plugin.getName()));
+        Bukkit.getLogger().info(String.format("Loaded %d translations from '%s' (%s) file of plugin %s.", translationsNumber, filePath, locale.toLanguageTag(), plugin.getName()));
     }
 
     @Override
     public void loadTranslationsFromDirectory(JavaPlugin plugin, String directoryPath) {
-        listFilesInDirectory(directoryPath).stream()
-                .filter(fileName -> fileName.toLowerCase().endsWith(".properties"))
-                .map(fileName -> fileName.substring(0, fileName.length() - ".properties".length()).toLowerCase())
-                .forEach(fileName -> loadTranslations(plugin, fileName, directoryPath + File.separator + fileName));
-    }
-
-    /**
-     * Sanitizes the value obtained from a lang file entry.
-     * This method removes any occurrences of the legacy character '§' from the value, if present.
-     * If the value contains '§', a warning message is logged indicating the usage of an illegal legacy character,
-     * and the '§' characters are removed from the value.
-     *
-     * @param entry the entry from the lang file
-     * @return the sanitized value as a String
-     */
-    private String sanitizeValue(Map.Entry<Object, Object> entry) {
-        String value = entry.getValue().toString();
-
-        if (value.contains("§")) {
-            Bukkit.getLogger().warning("Translation '" + entry.getKey().toString() + "' contains illegal legacy character. Please use Minimessage format.");
-            value = value.replace("§", "");
-        }
-        return value;
+        System.err.println("not implemented loadTranslationsFromDirectory method called"); //TODO implement
     }
 
     @Override
-    public Optional<Locale> getLocale(String code) {
-        return Optional.ofNullable(this.locales.get(code));
+    public Optional<Locale> getLocale(java.util.Locale locale) {
+        return Optional.ofNullable(this.locales.get(locale));
     }
 
     @Override
     public Locale getDefaultLocale() {
-        return getLocale(DEFAULT_LOCALE_CODE).orElseThrow();
+        return getLocale(DEFAULT_LOCALE).orElseThrow();
     }
 
     @Override
@@ -123,17 +67,6 @@ public class TranslationServiceImpl implements TranslationService {
     @Override
     public Component getComponentTranslation(String key, PlayerAccount playerAccount, TagResolver... arguments) {
         return getComponentTranslation(key, playerAccount.getLocale(), arguments);
-    }
-
-    private List<String> listFilesInDirectory(String directoryPath) {
-        try (Stream<Path> stream = Files.list(Paths.get(directoryPath))) {
-            return stream.filter(file -> !Files.isDirectory(file)).map(Path::toFile)
-                    .filter(File::isFile).map(File::getName).toList();
-        } catch (IOException e) {
-            Bukkit.getLogger().severe("Cannot read in translations directory " + directoryPath);
-            e.printStackTrace();
-            return List.of();
-        }
     }
 
 }

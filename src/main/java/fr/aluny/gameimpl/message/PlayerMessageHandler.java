@@ -42,11 +42,6 @@ public class PlayerMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int stay, int fadeOut) {
-        sendTitle(titleKey, titleArgs, messageKey, messageArgs, Duration.ofSeconds(fadeIn), Duration.ofSeconds(stay), Duration.ofSeconds(fadeIn));
-    }
-
-    @Override
     public void sendActionBar(String key, TagResolver... arguments) {
         Component component = locale.translateComponent(key, arguments);
         player.sendActionBar(component);
@@ -70,7 +65,7 @@ public class PlayerMessageHandler implements MessageHandler {
                     player.hideBossBar(bossBar);
                 }
 
-            }, 0, duration.toSeconds());
+            }, 0, duration.toSeconds()); // the total duration is divided in 20 periods (= seconds * 20 / 20)
         }
     }
 }

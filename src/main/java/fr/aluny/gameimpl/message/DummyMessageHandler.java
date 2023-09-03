@@ -9,26 +9,21 @@ public class DummyMessageHandler implements MessageHandler {
 
     @Override
     public void sendMessage(String key, TagResolver... arguments) {
-
+        // dummy does nothing
     }
 
     @Override
     public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, Duration fadeIn, Duration stay, Duration fadeOut) {
-
-    }
-
-    @Override
-    public void sendTitle(String titleKey, TagResolver titleArgs, String messageKey, TagResolver messageArgs, int fadeIn, int stay, int fadeOut) {
-
+        // dummy does nothing
     }
 
     @Override
     public void sendActionBar(String key, TagResolver... arguments) {
-
+        // dummy does nothing
     }
 
     @Override
     public void showBossBar(String titleKey, TagResolver arguments, BossBar.Color color, BossBar.Overlay overlay, Duration duration) {
-
+        // dummy does nothing
     }
 }

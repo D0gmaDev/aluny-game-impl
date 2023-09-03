@@ -6,6 +6,7 @@ import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameapi.scoreboard.Scoreboard;
 import fr.aluny.gameapi.scoreboard.team.ScoreboardTeam;
+import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameimpl.message.PlayerMessageHandler;
 import java.time.Instant;
 import java.util.Collection;
@@ -28,12 +29,15 @@ public class GamePlayerImpl implements GamePlayer {
     private       Scoreboard     scoreboard;
     private       boolean        vanished;
 
-    private Rank cachedHighestRank;
+    private Rank   cachedHighestRank;
+    private Locale cachedLocale;
 
     public GamePlayerImpl(Player player, PlayerAccount playerBean) {
         this.player = player;
         this.messageHandler = new PlayerMessageHandler(player, playerBean.getLocale());
+
         this.cachedHighestRank = playerBean.getHighestRank();
+        this.cachedLocale = playerBean.getLocale();
     }
 
     @Override
@@ -233,5 +237,13 @@ public class GamePlayerImpl implements GamePlayer {
 
     public void setCachedHighestRank(Rank highestRank) {
         this.cachedHighestRank = highestRank;
+    }
+
+    public Locale getCachedLocale() {
+        return this.cachedLocale;
+    }
+
+    public void setCachedLocale(Locale locale) {
+        this.cachedLocale = locale;
     }
 }

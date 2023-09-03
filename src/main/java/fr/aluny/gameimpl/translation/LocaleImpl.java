@@ -9,14 +9,16 @@ import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 
 public class LocaleImpl implements Locale {
 
+    private final java.util.Locale javaLocale;
     private final String              code;
     private final boolean             defaultLocale;
     private final Map<String, String> translations = new HashMap<>();
 
     private final TranslationServiceImpl translationService;
 
-    public LocaleImpl(String code, boolean defaultLocale, TranslationServiceImpl translationService) {
-        this.code = code;
+    public LocaleImpl(java.util.Locale javaLocale, boolean defaultLocale, TranslationServiceImpl translationService) {
+        this.javaLocale = javaLocale;
+        this.code = javaLocale.toLanguageTag();
         this.defaultLocale = defaultLocale;
         this.translationService = translationService;
     }
@@ -28,7 +30,7 @@ public class LocaleImpl implements Locale {
 
     @Override
     public String translate(String key) {
-        if (this.translations.containsKey(key))
+        if (hasTranslation(key))
             return this.translations.get(key);
 
         if (this.defaultLocale)
@@ -45,6 +47,11 @@ public class LocaleImpl implements Locale {
     @Override
     public boolean hasTranslation(String key) {
         return this.translations.containsKey(key);
+    }
+
+    @Override
+    public java.util.Locale getJavaLocale() {
+        return this.javaLocale;
     }
 
     @Override

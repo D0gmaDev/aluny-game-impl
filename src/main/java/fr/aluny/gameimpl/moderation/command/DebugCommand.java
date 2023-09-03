@@ -7,6 +7,7 @@ import fr.aluny.gameapi.player.GamePlayer;
 import fr.aluny.gameapi.player.PlayerAccount;
 import fr.aluny.gameapi.player.rank.Rank;
 import fr.aluny.gameapi.service.ServiceManager;
+import fr.aluny.gameapi.translation.Locale;
 import fr.aluny.gameimpl.player.GamePlayerImpl;
 import fr.aluny.gameimpl.player.GamePlayerServiceImpl;
 import fr.aluny.gameimpl.player.PlayerAccountServiceImpl;
@@ -78,6 +79,23 @@ public class DebugCommand extends Command {
             targetImpl.setCachedHighestRank(highestRank);
             gamePlayer.getPlayer().sendMessage(Component.text("Updated " + targetImpl.getPlayerName() + "'s cached rank to ").append(Component.text(highestRank.getName(), highestRank.getTextColor())));
         }
+    }
+
+    @SubCommand(name = "update_cached_locale")
+    public void updateCachedLocaleContext(GamePlayer gamePlayer, GamePlayer target, String[] args) {
+        if (target instanceof GamePlayerImpl targetImpl) {
+            Locale locale = serviceManager.getPlayerAccountService().getPlayerAccount(targetImpl).getLocale();
+            targetImpl.setCachedLocale(locale);
+            gamePlayer.getPlayer().sendMessage(Component.text("Updated " + targetImpl.getPlayerName() + "'s cached locale to " + locale));
+        }
+    }
+
+    @SubCommand(name = "translate")
+    public void translateContext(GamePlayer gamePlayer, String localeTag, String key, String[] args) {
+        serviceManager.getTranslationService().getLocale(java.util.Locale.forLanguageTag(localeTag)).ifPresentOrElse(
+                locale -> gamePlayer.getPlayer().sendMessage(locale.translateComponent(key)),
+                () -> gamePlayer.getPlayer().sendMessage(Component.text("La locale n'a pas été trouvée."))
+        );
     }
 
 }
