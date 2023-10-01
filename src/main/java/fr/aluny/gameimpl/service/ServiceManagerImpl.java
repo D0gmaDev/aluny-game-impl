@@ -2,6 +2,7 @@ package fr.aluny.gameimpl.service;
 
 import fr.aluny.gameapi.chat.ChatService;
 import fr.aluny.gameapi.command.CommandService;
+import fr.aluny.gameapi.item.ItemService;
 import fr.aluny.gameapi.message.MessageService;
 import fr.aluny.gameapi.moderation.ModerationService;
 import fr.aluny.gameapi.moderation.VanishService;
@@ -30,6 +31,7 @@ public class ServiceManagerImpl implements ServiceManager {
     private ChatService           chatService;
     private CommandService        commandService;
     private GamePlayerService     gamePlayerService;
+    private ItemService           itemService;
     private LootModifierService   lootModifierService;
     private MessageService        messageService;
     private ModerationService     moderationService;
@@ -59,7 +61,7 @@ public class ServiceManagerImpl implements ServiceManager {
 
     private Collection<Service> getAllServices() {
         return List.of(
-                anchorService, chatService, commandService, gamePlayerService, lootModifierService,
+                anchorService, chatService, commandService, gamePlayerService, itemService, lootModifierService,
                 messageService, moderationService, playerAccountService, proxyMessagingService, rankService,
                 schematicService, scoreboardService, scoreboardTeamService, timerService, translationService,
                 valueService, vanishService, runnableHelper
@@ -100,6 +102,15 @@ public class ServiceManagerImpl implements ServiceManager {
 
     public void setGamePlayerService(GamePlayerService gamePlayerService) {
         this.gamePlayerService = gamePlayerService;
+    }
+
+    @Override
+    public ItemService getItemService() {
+        return itemService;
+    }
+
+    public void setItemService(ItemService itemService) {
+        this.itemService = itemService;
     }
 
     @Override

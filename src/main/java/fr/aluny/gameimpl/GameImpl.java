@@ -14,6 +14,7 @@ import fr.aluny.gameimpl.chat.ChatServiceImpl;
 import fr.aluny.gameimpl.chat.PlayerChatListener;
 import fr.aluny.gameimpl.command.CommandManager;
 import fr.aluny.gameimpl.command.CommandServiceImpl;
+import fr.aluny.gameimpl.item.ItemServiceImpl;
 import fr.aluny.gameimpl.message.MessageServiceImpl;
 import fr.aluny.gameimpl.moderation.ModerationServiceImpl;
 import fr.aluny.gameimpl.moderation.VanishServiceImpl;
@@ -104,6 +105,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         ChatServiceImpl chatService = new ChatServiceImpl(serviceManager);
         CommandServiceImpl commandService = new CommandServiceImpl(new CommandManager(this), serviceManager);
         GamePlayerServiceImpl gamePlayerService = new GamePlayerServiceImpl(serviceManager);
+        ItemServiceImpl itemService = new ItemServiceImpl(serviceManager, this);
         LootModifierServiceImpl lootModifierService = new LootModifierServiceImpl(serviceManager);
         MessageServiceImpl messageService = new MessageServiceImpl(serviceManager);
         ModerationServiceImpl moderationService = new ModerationServiceImpl(playerSanctionAPI, playerAPI, serviceManager);
@@ -124,6 +126,7 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
         serviceManager.setChatService(chatService);
         serviceManager.setCommandService(commandService);
         serviceManager.setGamePlayerService(gamePlayerService);
+        serviceManager.setItemService(itemService);
         serviceManager.setLootModifierService(lootModifierService);
         serviceManager.setMessageService(messageService);
         serviceManager.setModerationService(moderationService);
@@ -198,22 +201,6 @@ public class GameImpl extends JavaPlugin implements IAlunyGame {
     @Override
     public ServerSettings getServerSettings() {
         return Optional.ofNullable(this.serverSettings).orElseThrow(() -> new IllegalStateException("Game ServerSettings not initialized"));
-    }
-
-    public static void info(String message) {
-        plugin.getSLF4JLogger().info(message);
-    }
-
-    public static void warn(String message) {
-        plugin.getSLF4JLogger().warn(message);
-    }
-
-    public static void error(String message) {
-        plugin.getSLF4JLogger().error(message);
-    }
-
-    public static void error(String message, Throwable throwable) {
-        plugin.getSLF4JLogger().error(message, throwable);
     }
 
     public static JavaPlugin getPlugin() {
